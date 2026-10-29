@@ -1,0 +1,22 @@
+# secrets & env
+.env
+*.key
+*_SECRET*
+
+# runtime data
+data/
+*.db
+*.db-shm
+*.db-wal
+server.log
+server.pid
+server.port
+
+# archives
+*.zip
+
+# node/python cruft
+node_modules/
+__pycache/
+*.pyc
+.DS_Store
