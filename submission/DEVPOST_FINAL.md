@@ -155,6 +155,46 @@ node.js, javascript, sqlite, paypal, paypal-orders-v2, naive-bayes, ai, machine-
 
 ---
 
+## Field: PayPal integration feedback (required on the "Additional info" step)
+
+Three of these are required (marked `*`); the two conditional ones below them are only for
+APIMatic / AG Grid users — we used neither, so those two stay empty.
+
+**1. `* How would you rate your overall experience integrating PayPal? (1=poor, 10=excellent)`**
+
+```
+8
+```
+
+**2. `* Overall experience rating: Please share why or provide additional feedback.`**
+
+```
+8/10. The REST surface is small and predictable: client_credentials -> Orders v2 create ->
+approve_url -> capture. Our first real sandbox order (2UV73710NH840425B, USD 21.50) went from
+token to COMPLETED without an error, and the capture response returned a stable capture id we
+could store and compare against, which is exactly what an idempotency check needs.
+
+The friction was not in the API but in the shape of the flow: buyer approval can only happen on
+PayPal's hosted checkout page, so create -> approve -> capture cannot be exercised end to end in
+an automated test run without a human signing in as a sandbox buyer in between. For a teaching
+tool that turned out to be the most useful lesson of the build, because it forced us to put the
+adapter behind a seam and keep a mock state machine for CI, with the real adapter behind an
+explicit switch.
+
+Two smaller notes: the access token expires in about 9 hours, so token lifetime has to be handled
+deliberately rather than assumed; and sandbox credentials are easy to leave lying around while
+debugging, so we regenerated ours before publishing and kept .env out of the repository entirely.
+```
+
+**3. `* Are you open to us contacting you for additional feedback regarding your experience with integrating PayPal?`**
+
+```
+Yes
+```
+
+**4. `If you used the APIMatic Context Plug-in ...`** — not used, leave empty.
+**5. `If you used AG Grid ...`** — not used, leave empty.
+
 ## Pre-submit checklist (verify in this order)
 
 - [ ] Video uploaded to YouTube and set to **Public** (not Unlisted) — hard requirement
@@ -165,4 +205,8 @@ node.js, javascript, sqlite, paypal, paypal-orders-v2, naive-bayes, ai, machine-
 - [ ] Devpost account logged in, eligibility (age of majority, country) confirmed
 - [ ] Official Rules accepted on the Devpost form — legal agreement, must be the participant
 - [ ] "Tools" field filled (PayPal Orders v2 + local Naive Bayes + agent-built disclosure)
+- [ ] "Additional info" step: **Upload a File left empty** (no upload is required by the rules)
+- [ ] "Additional info" step: Submitter Type = Individual, Country of Residence = truthful (this
+      shows publicly in the project gallery); both are the participant's own declarations
+- [ ] "Additional info" step: PayPal feedback rating + reason filled (see section above)
 - [ ] Optional: keep `submission/` docs in the repo (fine to leave public)
