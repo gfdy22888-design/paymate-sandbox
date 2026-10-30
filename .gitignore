@@ -20,3 +20,4 @@ node_modules/
 __pycache/
 *.pyc
 .DS_Store
+demo/preview-*.png

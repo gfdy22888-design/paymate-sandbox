@@ -1,0 +1,82 @@
+1
+00:00:00,000 --> 00:00:12,000
+CheckoutLab: suggestions are not authorization
+An offline learning lab for students exploring agentic systems.
+A statistical model proposes; a separate system validates.
+A human confirms each MOCK checkout step.
+This video renders a real local HTTP execution trace.
+It is not a browser screen recording or a PayPal integration demo.
+Trace SHA256: 675b4f233fb41eca3a1fadea
+
+2
+00:00:12,000 --> 00:00:24,000
+Experiment 1: a small, inspectable local ML model
+GET /api/learn/model -> HTTP 200
+Multinomial Naive Bayes, 7 classes, 21 synthetic teaching examples.
+POST /api/learn/predict  {text: 'milk coffee'}
+Prediction: SKU-LATTE
+Matched features: milk, coffee
+Log-score separation: 1.5246
+This is not a calibrated probability or a production accuracy claim.
+
+3
+00:00:24,000 --> 00:00:36,000
+Experiment 2: abstain rather than authorize
+Input: spaceship rocket
+Model response: abstain
+Reason: INSUFFICIENT_EVIDENCE
+A separate ambiguous checkout request returns HTTP 422.
+Reason: AMBIGUOUS_CONNECTIVE
+A model suggestion never creates an order or moves money.
+
+4
+00:00:36,000 --> 00:00:48,000
+Experiment 3: the server owns the price
+Order: 2 lattes + 1 notebook, from a fixed teaching catalog.
+Deliberately submitted client claim: $0.01
+Actual server total: $21.50
+Prices are recomputed in integer cents from server-side data.
+The claimed total is audit evidence, never pricing authority.
+Order state: draft. No payment has been approved.
+
+5
+00:00:48,000 --> 00:01:00,000
+Experiment 4: enforce authorization states
+POST capture before approval -> HTTP 409
+Then use separate explicit actions:
+Confirm -> created
+Mock buyer approval -> approved
+Mock capture -> captured
+Capture identifier: MOCK-CAP-5MG73JWF
+All actions here use the local MOCK adapter. No real funds.
+
+6
+00:01:00,000 --> 00:01:12,000
+Experiment 5: a retry is not another capture
+POST capture again -> HTTP 200
+Idempotent: True
+Same capture identifier: True
+The SQLite event trail records each authorization transition.
+Regression tests additionally exercise concurrency and isolation.
+119 local regression checks passed; fixtures are not a benchmark.
+
+7
+00:01:12,000 --> 00:01:24,000
+Small default runtime, explicit limits
+No model downloads, API credits, GPU or npm packages are needed.
+Observed Node RSS in this one local run: 58.5 MiB.
+This is not a peak bound or a VPS-wide capacity measurement.
+Optional external LLM and PayPal Sandbox routes remain unverified.
+Data: agent-authored synthetic examples; no real customer dataset.
+Implementation: QwenPaw; review and learning extension: Codex.
+
+8
+00:01:24,000 --> 00:01:36,000
+Reproduce, inspect, and learn
+Node.js 22+ with node:sqlite:
+  node server.js
+  http://127.0.0.1:8787
+  node test/learning.test.js
+  node demo/run_demo.js demo/api-trace.json
+Source: github.com/gfdy22888-design/paymate-sandbox
+Read AI_USAGE.md, the caveats, and the submission checklist.

@@ -19,3 +19,12 @@ jobs:
         run: node test/security.test.js
       - name: e2e
         run: node test/e2e.test.js
+      - name: learning model and API
+        run: node test/learning.test.js
+      - name: bounded launcher smoke
+        shell: bash
+        run: |
+          set -euo pipefail
+          trap 'bash stop.sh' EXIT
+          PAYMATE_PORT=19771 bash start.sh
+          curl --fail --silent --max-time 5 http://127.0.0.1:19771/api/learn/model

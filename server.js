@@ -8,6 +8,7 @@ const path = require('path');
 
 const { CATALOG, computeTotalCents, getBySku, MAX_QTY_PER_ITEM, MAX_ITEMS_PER_ORDER } = require('./lib/catalog');
 const intentParser = require('./lib/intent');
+const learningModel = require('./lib/learning_model');
 const store = require('./lib/store');
 const { getAdapter, getAiAdapter } = require('./lib/adapters');
 
@@ -136,9 +137,20 @@ function money(cents) { return '$' + (cents / 100).toFixed(2); }
 function homePage() {
   const rows = CATALOG.map(p =>
     `<tr><td class="mono">${esc(p.sku)}</td><td>${esc(p.name_zh)} / ${esc(p.name_en)}</td><td class="amount">${money(p.unit_price_cents)}</td></tr>`).join('');
-  return page('PayMate Sandbox', `
-  <h1>PayMate Sandbox</h1>
+  return page('CheckoutLab — PayMate Sandbox', `
+  <h1>CheckoutLab</h1>
+  <p>Learn the boundary between a model suggestion and an authorized transaction. Built on the PayMate Sandbox offline prototype.</p>
   <p class="muted">自然语言购物意图 → 可解释订单 → 人工确认 → MOCK 沙箱结账（PayPal Orders v2 流程演示）</p>
+
+  <div class="card">
+    <h3>Learning experiment: a tiny local ML model</h3>
+    <p>Multinomial Naive Bayes trained on 21 synthetic teaching examples, seven product classes. No API, downloads, or GPU. This is not an LLM; its score is not a calibrated probability. It never submits orders.</p>
+    <label for="modelText">Describe one item (e.g. milk coffee, paper lecture notes, 帆布购物袋)</label><br>
+    <input type="text" id="modelText" maxlength="512" value="milk coffee">
+    <button onclick="classifyLocally()">Get model suggestion</button>
+    <pre id="modelResult" style="white-space:pre-wrap" aria-live="polite"></pre>
+    <p class="muted">Try an unknown product or a negation. Compare this statistical suggestion with the strict order parser below. Every payment action still needs a separate human click.</p>
+  </div>
 
   <div class="card">
     <h3>① 描述你想买什么</h3>
@@ -159,6 +171,14 @@ function homePage() {
 
   <script>
   function escText(s){ const d=document.createElement('div'); d.textContent=String(s??''); return d.innerHTML; }
+  async function classifyLocally() {
+    const el = document.getElementById('modelResult');
+    el.textContent = 'Classifying locally…';
+    try {
+      const r = await fetch('/api/learn/predict', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({text:document.getElementById('modelText').value})});
+      el.textContent = JSON.stringify(await r.json(), null, 2);
+    } catch(e) { el.textContent = 'Request failed: ' + e.message; }
+  }
   async function doIntent() {
     const q = document.getElementById('q').value;
     const el = document.getElementById('intentResult');
@@ -285,6 +305,13 @@ const server = http.createServer(async (req, res) => {
 
     if (p === '/api/catalog' && req.method === 'GET') {
       return json(res, 200, { catalog: CATALOG, max_qty_per_item: MAX_QTY_PER_ITEM, max_items_per_order: MAX_ITEMS_PER_ORDER });
+    }
+
+    if (p === '/api/learn/model' && req.method === 'GET') return json(res, 200, learningModel.info);
+    if (p === '/api/learn/predict' && req.method === 'POST') {
+      const body = await readJson(req);
+      if (!body || typeof body.text !== 'string') return json(res, 400, {error:'TEXT_REQUIRED'});
+      return json(res, 200, learningModel.predict(body.text));
     }
 
     if (p === '/api/intent' && req.method === 'POST') {

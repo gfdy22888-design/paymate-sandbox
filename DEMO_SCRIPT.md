@@ -1,4 +1,8 @@
-# DEMO_SCRIPT.md — 3 分钟演示脚本（MOCK 模式，全程显著标注）
+# Demo scripts
+
+Current educational demo: `node demo/run_demo.js demo/api-trace.json`, then optional `python demo/build_video.py` using Pillow and imageio-ffmpeg on a development machine. `demo/checkoutlab-demo.mp4` is a 96-second captioned walkthrough rendered from the actual API trace, with `demo/CAPTIONS.en.srt`. It is not a browser screen recording; no payment or external LLM call is real. A YouTube/Vimeo upload and event-specific checks remain pending.
+
+## Historical 3-minute mock-checkout browser script
 
 > 录制前提：`bash start.sh`，浏览器打开 http://127.0.0.1:8787 。UI 顶部始终显示"离线规则模式 ｜ MOCK 非真实支付（未做真实联调）"。
 

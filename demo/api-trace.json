@@ -1,0 +1,190 @@
+{
+  "kind": "actual-local-http-execution",
+  "recorded_at": "2026-10-30T02:02:20.161Z",
+  "browser_recording": false,
+  "real_paypal": false,
+  "events": [
+    {
+      "time": "2026-10-30T02:02:20.008Z",
+      "step": "model",
+      "detail": {
+        "http": 200,
+        "result": {
+          "type": "multinomial-naive-bayes",
+          "training_documents": 21,
+          "classes": 7,
+          "features": 82,
+          "training_source": "agent-authored synthetic teaching examples in lib/learning_model.js",
+          "external_calls": false,
+          "caveat": "Toy classifier. Scores are not calibrated probabilities or measured real-world accuracy. Predictions never create or approve an order."
+        }
+      }
+    },
+    {
+      "time": "2026-10-30T02:02:20.015Z",
+      "step": "model_suggestion",
+      "detail": {
+        "http": 200,
+        "result": {
+          "status": "suggestion",
+          "model": "multinomial-naive-bayes",
+          "sku": "SKU-LATTE",
+          "log_score_gap": 1.5246,
+          "matched_features": [
+            "milk",
+            "coffee"
+          ],
+          "action": "TEACHING_SUGGESTION_ONLY",
+          "caveat": "Toy classifier. Scores are not calibrated probabilities or measured real-world accuracy. Predictions never create or approve an order."
+        }
+      }
+    },
+    {
+      "time": "2026-10-30T02:02:20.038Z",
+      "step": "model_abstains",
+      "detail": {
+        "http": 200,
+        "result": {
+          "status": "abstain",
+          "reason": "INSUFFICIENT_EVIDENCE",
+          "model": "multinomial-naive-bayes"
+        }
+      }
+    },
+    {
+      "time": "2026-10-30T02:02:20.053Z",
+      "step": "ambiguous_order_rejected",
+      "detail": {
+        "http": 422,
+        "result": {
+          "status": "unresolvable",
+          "reason": "AMBIGUOUS_CONNECTIVE",
+          "items": [],
+          "mode": "rule",
+          "detail": [
+            "或者"
+          ]
+        }
+      }
+    },
+    {
+      "time": "2026-10-30T02:02:20.068Z",
+      "step": "validated_intent",
+      "detail": {
+        "http": 200,
+        "result": {
+          "status": "ok",
+          "items": [
+            {
+              "sku": "SKU-LATTE",
+              "qty": 2,
+              "rationale": "规则匹配「latte」@2 → SKU-LATTE，数量=2"
+            },
+            {
+              "sku": "SKU-NOTEBOOK",
+              "qty": 1,
+              "rationale": "规则匹配「notebook」@14 → SKU-NOTEBOOK，数量=1"
+            }
+          ],
+          "mode": "rule"
+        }
+      }
+    },
+    {
+      "time": "2026-10-30T02:02:20.090Z",
+      "step": "price_authority",
+      "detail": {
+        "claimed_cents": 1,
+        "actual_cents": 2150,
+        "state": "draft"
+      }
+    },
+    {
+      "time": "2026-10-30T02:02:20.099Z",
+      "step": "capture_before_approval_rejected",
+      "detail": {
+        "http": 409,
+        "result": {
+          "error": "ILLEGAL_TRANSITION: draft -> captured"
+        }
+      }
+    },
+    {
+      "time": "2026-10-30T02:02:20.108Z",
+      "step": "confirm",
+      "detail": {
+        "http": 200,
+        "state": "created",
+        "adapter": "MOCK",
+        "capture_id": null
+      }
+    },
+    {
+      "time": "2026-10-30T02:02:20.121Z",
+      "step": "approve",
+      "detail": {
+        "http": 200,
+        "state": "approved",
+        "adapter": "MOCK",
+        "capture_id": null
+      }
+    },
+    {
+      "time": "2026-10-30T02:02:20.132Z",
+      "step": "capture",
+      "detail": {
+        "http": 200,
+        "state": "captured",
+        "adapter": "MOCK",
+        "capture_id": "MOCK-CAP-5MG73JWF"
+      }
+    },
+    {
+      "time": "2026-10-30T02:02:20.149Z",
+      "step": "repeated_capture",
+      "detail": {
+        "http": 200,
+        "idempotent": true,
+        "same_capture_id": true
+      }
+    },
+    {
+      "time": "2026-10-30T02:02:20.160Z",
+      "step": "audit_events",
+      "detail": {
+        "events": [
+          {
+            "ts": "2026-10-30T02:02:20.087Z",
+            "event": "created as draft (server_total=2150, client_claimed=1)"
+          },
+          {
+            "ts": "2026-10-30T02:02:20.103Z",
+            "event": "transition draft -> confirmed"
+          },
+          {
+            "ts": "2026-10-30T02:02:20.106Z",
+            "event": "transition confirmed -> created (MOCK create)"
+          },
+          {
+            "ts": "2026-10-30T02:02:20.117Z",
+            "event": "transition created -> approved (MOCK buyer approval)"
+          },
+          {
+            "ts": "2026-10-30T02:02:20.130Z",
+            "event": "transition approved -> captured (MOCK capture)"
+          }
+        ]
+      }
+    },
+    {
+      "time": "2026-10-30T02:02:20.161Z",
+      "step": "resources",
+      "detail": {
+        "observed_rss_mib": 58.5,
+        "node": "v24.19.0",
+        "external_requests": 0,
+        "note": "One local process snapshot, not a VPS-wide measurement or peak-memory bound."
+      }
+    }
+  ]
+}

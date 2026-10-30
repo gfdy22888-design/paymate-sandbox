@@ -1,0 +1,11 @@
+{
+  "duration_seconds": 96,
+  "fps": 10,
+  "size": [
+    1280,
+    720
+  ],
+  "kind": "rendered-actual-api-trace-not-browser-recording",
+  "trace_sha256": "675b4f233fb41eca3a1fadeac3803db5808763b170f13033c7d11c4072f54dd3",
+  "video_sha256": "44747d552cc2783c2b35f357761e3151aa26c72bb735c56aee52494dca8cd420"
+}

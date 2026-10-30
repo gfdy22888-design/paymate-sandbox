@@ -1,4 +1,16 @@
-# STATUS.md — PayMate Sandbox 离线 MVP（验收轮 2026-10-30 Asia/Singapore）
+# STATUS.md — CheckoutLab（2026-10-30 Asia/Shanghai）
+
+## 当前教学扩展
+
+- 本地 Naive Bayes 教学模型、教学面板、实际 API 演示脚本已实现；四套本机回归检查 119/119 通过。
+- 当前目标为教育方向；默认路径不依赖 PayPal 或外部模型 API。外部接口仍禁用且未联调，不能冒充验证完成。
+- 参赛者的概况已私下提供；已按公开年龄/在校条件核对。身份信息不写入公开仓库，平台及其他资格声明须如实完成。
+- 已准备英文 Devpost 草稿与流程清单；演示输出为实际 API 执行轨迹的字幕化视频，不是浏览器录屏。
+- 本轮尚未完成新教学面板浏览器点击验收、YouTube/Vimeo 上传、Devpost 报名/条款接受/正式提交或 Demo Day。
+- 浏览器操作工具连接断开，不能声称远程 VPS 已完成清理；历史测试服务已报告停止，当前资源余量未核实。
+- 新提交的 GitHub CI 需在推送后单独核对，不能使用旧提交的成功记录代替。详见 submission/ACCEPTANCE.md。
+
+## 以下为原版 PayMate Sandbox 验收历史（不代表新面板已浏览器验收）
 
 ## 状态总览
 

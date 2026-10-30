@@ -1,8 +1,22 @@
-# PayMate Sandbox
+# CheckoutLab
+
+An offline educational lab for separating a machine-learning suggestion from an authorized action. Built on the PayMate Sandbox mock-checkout prototype.
+
+The new learning panel uses a real **multinomial Naive Bayes model fitted from 21 explicit synthetic teaching examples**. It classifies one product description, exposes matched features and score separation, and abstains when evidence is insufficient. It is not an LLM; its scores are not calibrated probabilities or real-world accuracy estimates. A prediction never creates or approves an order. The checkout below the panel retains its separate strict rule parser and human confirmation steps.
+
+- No model download, external API, GPU or npm dependencies are required by the default path.
+- Run: `node server.js`, then visit `http://127.0.0.1:8787`.
+- Tests: run the three original suites below plus `node test/learning.test.js` (21 new checks; 119 total local regression checks).
+- Reproducible actual API execution: `node demo/run_demo.js demo/api-trace.json`.
+- Current competition plan: Education track; [submission workflow](submission/WORKFLOW.md), [Devpost draft](submission/DEVPOST_DRAFT.md).
+- The captioned demo is rendered from the saved actual API execution trace. It is **not a browser screen recording** and shows no live PayPal or external LLM call. Earlier `ui_*.png` screenshots belong to the original checkout UI validation.
+- No contest registration, account-specific declaration or final submission has been completed. Public code and successful tests alone do not constitute an entry.
+
+## Original mock-checkout core
 
 Natural-language shopping intent → explainable order → **human confirmation** → MOCK sandbox checkout (PayPal Orders API v2 flow demonstration).
 
-> **This is an offline demo MVP.** Payment defaults to a local MOCK adapter, prominently labelled MOCK everywhere. **It is not a real payment** and is not connected to any real PayPal account. PayPal Sandbox and AI adapters are implemented but **disabled and unverified** by default.
+> Payment defaults to a local MOCK adapter, prominently labelled MOCK everywhere. **It is not a real payment** and is not connected to any real PayPal account. The optional PayPal Sandbox and external LLM adapters remain **disabled and unverified**. The educational local classifier above does run without either adapter.
 
 ## Features
 
@@ -36,7 +50,7 @@ node test/security.test.js   # 15 assertions: Host/Origin guard, bad cookie/JSON
 node test/e2e.test.js        # 34 assertions: full HTTP chain incl. tamper, cross-session, concurrent capture idempotency
 ```
 
-All currently pass (98 total). Full logs: `TEST_REPORT.md`.
+The original three suites pass (98 checks). The local learning-model suite adds 21 checks, for 119 total. The historical remote Node 22 run and original UI validation are in `TEST_REPORT.md`; the new educational extension is described in `submission/ACCEPTANCE.md`.
 
 ## PayPal Sandbox adapter (implemented, OFF by default)
 
@@ -53,13 +67,13 @@ PAYMATE_ENABLE_PAYPAL=true
 
 **Status: code-ready, NOT integration-tested (no sandbox credentials). Do not claim verified until it has been run end-to-end.**
 
-## Optional AI adapter (OFF by default)
+## Optional external LLM adapter (OFF by default)
 
 OpenAI-compatible backend (e.g. a deployed WorkBuddy Gateway). Requires `WORKBUDDY_BASE_URL` + `WORKBUDDY_API_KEY` + `PAYMATE_ENABLE_AI=true`; hourly call cap via `PAYMATE_AI_MAX_CALLS` (default 20). Only consulted when the rule parser fails; its output must pass the same server-side SKU/qty validation; any failure falls back to rule mode. The gateway URL/key stay server-side and never appear in frontend code or the public repo. **Status: implemented, unverified (no confirmed quota).**
 
 ## AI usage disclosure
 
-See `AI_USAGE.md`: QwenPaw Agent (glm-5.3-flash) generated the implementation; Codex supervised the work, reviewed code, requested fixes, and prepared this public release. **No human code review is claimed.** Automated tests and an agent-operated browser exercised the offline paths; the external integrations remain unverified.
+See `AI_USAGE.md`: QwenPaw Agent (glm-5.3-flash) generated the original checkout core; Codex reviewed it and implemented the educational local model and new tests. **No human code review is claimed.** Original checkout browser validation predates the new panel; the panel has API, fixture and generated-script checks, but no completed browser click-through in this release. External integrations remain unverified.
 
 ## Project layout
 
@@ -85,4 +99,4 @@ MIT. See [LICENSE](LICENSE).
 
 ## Submission readiness
 
-**Not ready for competition submission.** Outstanding: PayPal Sandbox integration testing, AI adapter verification, demo video recording, Devpost submission, and eligibility confirmation (age / residence). Public source repository: [gfdy22888-design/paymate-sandbox](https://github.com/gfdy22888-design/paymate-sandbox). Publication does not constitute contest registration or submission. See `STATUS.md`.
+**Not submitted.** The current educational competition path uses the local classifier and MOCK checkout; optional PayPal/LLM integration is not a prerequisite for that path. Remaining gates include browser verification, a verified YouTube/Vimeo demo URL, account-specific registration and rule acceptance, and Demo Day instructions/presentation. Public source repository: [gfdy22888-design/paymate-sandbox](https://github.com/gfdy22888-design/paymate-sandbox). See `STATUS.md` and the submission workflow.

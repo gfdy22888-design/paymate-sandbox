@@ -13,6 +13,7 @@ python3 - "$PORT" << 'PY'
 import subprocess, sys, os
 port = sys.argv[1]
 env = dict(os.environ); env['PAYMATE_PORT'] = port
+env.setdefault('NODE_OPTIONS', '--max-old-space-size=128')
 log = open('server.log', 'ab')
 p = subprocess.Popen(['node', 'server.js'], cwd='.', stdin=subprocess.DEVNULL,
                      stdout=log, stderr=subprocess.STDOUT,
