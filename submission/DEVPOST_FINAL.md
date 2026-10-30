@@ -22,8 +22,12 @@ An offline learning lab that shows — in source code and in a running checkout 
 ## Field: Video link (YouTube, public)
 
 ```
-<PASTE YOUTUBE URL — required, must be public>
+https://youtu.be/_OxAlKRfZ7I
 ```
+
+Verified 2026-10-30 21:47 via YouTube oEmbed: title `CheckoutLab — Human-Confirmed AI Checkout Demo
+(PayPal AI Hackathon)`, channel `weO`. oEmbed cannot distinguish Public from Unlisted — confirm
+"Visibility: Public" in YouTube Studio before submitting.
 
 ## Field: Repository (public, MIT license)
 
