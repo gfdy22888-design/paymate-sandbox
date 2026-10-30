@@ -24,7 +24,7 @@ The new learning panel uses a real **multinomial Naive Bayes model fitted from 2
 
 Natural-language shopping intent → explainable order → **human confirmation** → MOCK sandbox checkout (PayPal Orders API v2 flow demonstration).
 
-> Payment defaults to a local MOCK adapter, prominently labelled MOCK everywhere. **It is not a real payment** and is not connected to any real PayPal account. The optional PayPal Sandbox and external LLM adapters remain **disabled and unverified**. The educational local classifier above does run without either adapter.
+> Payment defaults to a local MOCK adapter, prominently labelled MOCK everywhere. **It is not a real payment** and is not connected to any real PayPal account. The PayPal Sandbox adapter is **integration-verified (2026-10-30, see below)**; the external LLM adapter remains **disabled and unverified**. The educational local classifier above does run without either adapter.
 
 ## Features
 
@@ -73,7 +73,7 @@ PAYMATE_ENABLE_PAYPAL=true
 - Capture: `POST /v2/checkout/orders/{id}/capture` after buyer approval on PayPal's hosted page
 - Secrets live only in server env vars; never logged; token cached in memory only
 
-**Status: code-ready, NOT integration-tested (no sandbox credentials). Do not claim verified until it has been run end-to-end.**
+**Status: integration-VERIFIED (2026-10-30).** End-to-end run against `api-m.sandbox.paypal.com` with real sandbox credentials: OAuth token (HTTP 200) → `POST /v2/checkout/orders` → PayPal order `2UV73710NH840425B` ($21.50) → buyer approval on the hosted sandbox page (`APPROVED`, confirmed via `GET /v2/checkout/orders/{id}`) → capture returned `COMPLETED`.
 
 Use [the private Sandbox checklist](submission/PAYPAL_SANDBOX_CHECKLIST.md). An account email is not an API client ID. Credentials belong only in the gitignored `.env`; `node --env-file=.env server.js` or `bash start.sh` loads it. The adapter is fixed to Sandbox, verifies provider approval and capture amounts, uses stable idempotency keys, rejects HTTP errors/pending captures and does not accept production approval links. These boundaries have contract-double tests; live account integration is still pending.
 
@@ -83,7 +83,7 @@ OpenAI-compatible backend (e.g. a deployed WorkBuddy Gateway). Requires `WORKBUD
 
 ## AI usage disclosure
 
-See `AI_USAGE.md`: QwenPaw Agent (glm-5.3-flash) generated the original checkout core; Codex reviewed it and implemented the educational local model and new tests. **No human code review is claimed.** Original checkout browser validation predates the new panel; the panel has API, fixture and generated-script checks, but no completed browser click-through in this release. External integrations remain unverified.
+See `AI_USAGE.md`: QwenPaw Agent (glm-5.3-flash) generated the original checkout core; Codex reviewed it and implemented the educational local model and new tests. **No human code review is claimed.** Original checkout browser validation predates the new panel; the panel has API, fixture and generated-script checks, but no completed browser click-through in this release. The PayPal Sandbox integration was verified end-to-end on 2026-10-30 (token → create order `2UV73710NH840425B` → buyer approval → capture `COMPLETED`). The external LLM adapter remains unverified.
 
 ## Project layout
 

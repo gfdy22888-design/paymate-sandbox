@@ -38,3 +38,8 @@
 ## 提交时的后续义务
 
 若用于黑客松提交：如实披露上述工具和分工；参赛者的亲自编码、人工复核、学习收获不得由 Agent 虚构。演示视频若由实际 API 日志渲染，应注明其不是浏览器录屏。开发期间若新增工具使用，先在此文件追加记录再提交。
+
+
+## Update 2026-10-30: PayPal Sandbox integration verified
+
+QwenPaw Agent (glm-5.3-flash) performed a live end-to-end sandbox run: OAuth token exchange (HTTP 200), `POST /v2/checkout/orders` (PayPal order `2UV73710NH840425B`, USD 21.50), buyer approval completed by the human participant on PayPal's hosted sandbox page (`APPROVED` per `GET /v2/checkout/orders/{id}`), and capture returning `COMPLETED`. The external LLM adapter remains unverified.

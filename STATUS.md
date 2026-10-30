@@ -19,7 +19,7 @@
 | 离线 MVP（规则解析 + MOCK 支付全链路） | ✅ 已完成并验证 |
 | 自动化测试 | ✅ 114 断言全绿（unit 49 / security 15 / e2e 34 / HTTP smoke 16） |
 | 浏览器 UI 全链路验收 | ✅ 已实跑并截图（ui_*.png 3 张） |
-| PayPal Sandbox 适配器 | ⚠️ 代码就绪、**未联调**（无凭据） |
+| PayPal Sandbox 适配器 | ✅ **已真实联调 2026-10-30**（token → create 订单 `2UV73710NH840425B` → 用户在 PayPal 托管页批准 APPROVED → capture 返回 COMPLETED） |
 | AI 适配器（WorkBuddy Gateway） | ⚠️ 代码就绪、**未启用未验证**（额度待确认） |
 | 参赛就绪 | ❌ 未就绪（见下） |
 
@@ -38,14 +38,14 @@
 
 ## 未验证（明确不算）
 
-- PayPal Sandbox 真实调用（create/approve/capture 对 api-m.sandbox.paypal.com）
+- ~~PayPal Sandbox 真实调用~~ → ✅ 已于 2026-10-30 真实联调通过（订单 `2UV73710NH840425B`，capture COMPLETED）
 - AI 适配器真实调用（网关额度/收费未确认）
 - 多用户并发压力/长稳测试
 - demo 视频录制、公开仓库 CI 在真实 GitHub 上的运行
 
 ## 参赛未就绪项
 
-1. PayPal sandbox 凭据（用户注册）→ 联调后才能声称集成验证
+1. ~~PayPal sandbox 凭据与联调~~ → ✅ 已完成；剩余：Regenerate secret（凭据曾出现在聊天记录）并更新 .env
 2. AI 网关额度确认 → 才能启用并验证 AI 路径
 3. 资格核验：用户年龄/居住地（PayPal 排除清单）、学籍（备选赛）
 4. 录制 demo 视频并上传 YouTube
