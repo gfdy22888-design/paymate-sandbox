@@ -208,9 +208,10 @@ function homePage() {
         el.textContent = 'Cannot determine intent: ' + (d.reason||'') + (d.detail? ' ('+d.detail.join(' / ')+')' : '') + '. Name items from the catalog with quantities; the system never guesses.';
         return;
       }
-      // send only sku+qty; server computes price; omit client_total_cents (no fake numbers)
+      // send only sku+qty plus the source phrase; the server re-parses it for the
+      // "why matched" column and always recomputes prices
       const r2 = await fetch('/api/orders', {method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({items: d.items.map(i=>({sku:i.sku, qty:i.qty}))})});
+        body: JSON.stringify({items: d.items.map(i=>({sku:i.sku, qty:i.qty})), source_text: q})});
       const d2 = await r2.json();
       if (d2.error) { el.textContent = 'Order failed: ' + d2.error; return; }
       location.href = '/order/' + encodeURIComponent(d2.order_id);
@@ -225,6 +226,7 @@ function orderPage(id) {
   <h1>Order <span class="mono" id="oid"></span></h1>
   <div id="content">Loading…</div>
   <div id="actions" style="margin-top:12px"></div>
+  <div id="notice" style="margin-top:10px" aria-live="polite"></div>
   <script>
   const ORDER_ID = ${JSON.stringify(safeId)};
   const SANDBOX = ${Boolean(getAdapter().isLive)};
@@ -245,6 +247,14 @@ function orderPage(id) {
     let statusLine = '<p>Status: <b>'+escText(o.status)+'</b> | Server total (authoritative): <b>$'+escText((o.total_cents/100).toFixed(2))+'</b>'
       + (o.client_total_cents!=null ? ' | Client-claimed total (audit only, never trusted): $'+escText((o.client_total_cents/100).toFixed(2)) : '')
       + (o.paypal_order_id ? ' | Payment order: <span class="mono">'+escText(o.paypal_order_id)+'</span>' : '') + '</p>';
+    // show the stored capture evidence (server-side record, not a client claim)
+    let capRec = null;
+    try { capRec = o.capture_result_json ? JSON.parse(o.capture_result_json) : null; } catch (e) { capRec = null; }
+    if (capRec) {
+      statusLine += '<p class="muted">Stored capture record: <b>'+escText(capRec.status || '')+'</b>'
+        + ' · capture id <span class="mono">'+escText(capRec.capture_id || '—')+'</span>'
+        + ' · idempotency key <span class="mono">'+escText(o.idempotency_key || '—')+'</span></p>';
+    }
     document.getElementById('content').innerHTML = statusLine +
       '<table><tr><th>SKU</th><th>Qty</th><th class="amount">Unit price</th><th class="amount">Subtotal</th><th>Why matched</th></tr>'+rows+'</table>';
     const a = document.getElementById('actions');
@@ -256,14 +266,16 @@ function orderPage(id) {
           + (approvalUrl ? '<p><a target="_blank" rel="noopener noreferrer" href="'+escText(approvalUrl)+'">Open PayPal SANDBOX approval</a></p>' : '<button onclick="act(\\'confirm\\')">Load Sandbox approval link</button>')
           + '<button onclick="act(\\'approve\\')">Verify buyer approval with Sandbox API</button> <button class="danger" onclick="act(\\'cancel\\')">Cancel</button>';
       } else {
-        a.innerHTML = '<div class="mock">MOCK: simulated buyer approval (no real PayPal connection)</div><button class="primary" onclick="act(\\'approve\\')">Simulate buyer approval (mock)</button> <button class="danger" onclick="act(\\'cancel\\')">Cancel</button>';
+        a.innerHTML = '<div class="mock">MOCK: simulated buyer approval (no real PayPal connection)</div>'
+          + (approvalUrl ? '<p><a href="'+escText(approvalUrl)+'">Open the mock buyer-approval page (simulated hosted page)</a></p>' : '')
+          + '<button class="primary" onclick="act(\\'approve\\')">Simulate buyer approval (mock)</button> <button class="danger" onclick="act(\\'cancel\\')">Cancel</button>';
       }
     } else if (o.status === 'approved') {
       a.innerHTML = '<button class="primary" onclick="act(\\'capture\\')">Capture payment (mock capture, idempotent)</button> <button class="danger" onclick="act(\\'cancel\\')">Cancel</button>';
     } else if (o.status === 'captured') {
       a.innerHTML = '<p class="ok">✅ Captured (MOCK). Repeated clicks return the same result (idempotent).</p><button onclick="act(\\'capture\\')">Click again to verify idempotency</button>';
     } else if (o.status === 'cancelled') {
-      a.innerHTML = '<p class="err">Order cancelled (terminal).</p>';
+      a.innerHTML = '<p class="err">Order cancelled (terminal).</p><button class="danger" onclick="act(\\'capture\\')">Try capture anyway (boundary test)</button>';
     } else if (o.status === 'confirmed') {
       a.innerHTML = '<p>Confirming…</p>';
     }
@@ -272,14 +284,24 @@ function orderPage(id) {
     }
   }
   async function act(step) {
+    const note = document.getElementById('notice');
+    if (note) note.textContent = '';
     try {
       const r = await fetch('/api/orders/' + encodeURIComponent(ORDER_ID) + '/' + step, {method:'POST'});
       const d = await r.json();
-      if (d.error) { alert('Failed: ' + d.error); }
+      if (d.error) {
+        // surface the server's rejection in the page instead of a blocking dialog
+        if (note) { note.className = 'err'; note.textContent = 'Rejected by server (' + r.status + '): ' + d.error; }
+      } else if (note && step === 'capture' && d.idempotent) {
+        note.className = 'ok';
+        note.textContent = 'Idempotent replay: HTTP 200, same stored capture id — no second charge.';
+      }
       if (d.approve_url) approvalUrl = d.approve_url;
       if (d.order) ORDER = d.order;
       render();
-    } catch(e) { alert('Request failed: ' + e.message); }
+    } catch(e) {
+      if (note) { note.className = 'err'; note.textContent = 'Request failed: ' + e.message; }
+    }
   }
   if (ORDER_ID) load(); else document.getElementById('content').textContent = 'Invalid order id.';
   </script>`);
@@ -366,6 +388,14 @@ const server = http.createServer(async (req, res) => {
       const body = await readJson(req);
       if (!Array.isArray(body.items) || body.items.length === 0) return json(res, 400, { error: 'ITEMS_REQUIRED' });
       try {
+        // Optional: the original phrase the shopper typed. It is re-parsed here with the
+        // deterministic server-side parser so the stored "why matched" text is derived
+        // server-side only — a client-supplied rationale is never trusted or persisted.
+        const explain = new Map();
+        if (typeof body.source_text === 'string' && body.source_text.trim()) {
+          const parsed = intentParser.parse(body.source_text.slice(0, 512));
+          if (parsed.status === 'ok') for (const pi of parsed.items) explain.set(pi.sku, pi.rationale);
+        }
         const items = body.items.map(it => {
           if (typeof it !== 'object' || it === null || Array.isArray(it)) throw new Error('ITEM_MUST_BE_OBJECT');
           if (typeof it.sku !== 'string') throw new Error('SKU_MUST_BE_STRING');           // strong typing: no true->1
@@ -375,7 +405,8 @@ const server = http.createServer(async (req, res) => {
           if (!prod) throw new Error('UNKNOWN_SKU: ' + String(it.sku).slice(0, 40));
           if (q < 1 || q > MAX_QTY_PER_ITEM) throw new Error(`INVALID_QTY: ${prod.sku} qty=${q}`);
           // server-side price only; client rationale NEVER persisted
-          return { sku: prod.sku, qty: q, unit_price_cents: prod.unit_price_cents, rationale: 'server catalog pricing' };
+          return { sku: prod.sku, qty: q, unit_price_cents: prod.unit_price_cents,
+                   rationale: explain.get(prod.sku) || 'catalog price (server-side)' };
         });
         const total = computeTotalCents(items);
         const clientTotal = Number.isInteger(body.client_total_cents) ? body.client_total_cents : null;
