@@ -15,7 +15,7 @@ port = sys.argv[1]
 env = dict(os.environ); env['PAYMATE_PORT'] = port
 env.setdefault('NODE_OPTIONS', '--max-old-space-size=128')
 log = open('server.log', 'ab')
-p = subprocess.Popen(['node', 'server.js'], cwd='.', stdin=subprocess.DEVNULL,
+p = subprocess.Popen(['node', '--env-file-if-exists=.env', 'server.js'], cwd='.', stdin=subprocess.DEVNULL,
                      stdout=log, stderr=subprocess.STDOUT,
                      start_new_session=True, close_fds=True, env=env)
 open('server.pid', 'w').write(str(p.pid))

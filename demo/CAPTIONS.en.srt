@@ -6,7 +6,7 @@ A statistical model proposes; a separate system validates.
 A human confirms each MOCK checkout step.
 This video renders a real local HTTP execution trace.
 It is not a browser screen recording or a PayPal integration demo.
-Trace SHA256: 675b4f233fb41eca3a1fadea
+Trace SHA256: 7295979b07cf8acb93c0f114
 
 2
 00:00:12,000 --> 00:00:24,000
@@ -47,7 +47,7 @@ Then use separate explicit actions:
 Confirm -> created
 Mock buyer approval -> approved
 Mock capture -> captured
-Capture identifier: MOCK-CAP-5MG73JWF
+Capture identifier: MOCK-CAP-3DJPEDI7
 All actions here use the local MOCK adapter. No real funds.
 
 6
@@ -58,13 +58,13 @@ Idempotent: True
 Same capture identifier: True
 The SQLite event trail records each authorization transition.
 Regression tests additionally exercise concurrency and isolation.
-119 local regression checks passed; fixtures are not a benchmark.
+151 local regression checks passed; fixtures are not a benchmark.
 
 7
 00:01:12,000 --> 00:01:24,000
 Small default runtime, explicit limits
 No model downloads, API credits, GPU or npm packages are needed.
-Observed Node RSS in this one local run: 58.5 MiB.
+Observed Node RSS in this one local run: 58.25 MiB.
 This is not a peak bound or a VPS-wide capacity measurement.
 Optional external LLM and PayPal Sandbox routes remain unverified.
 Data: agent-authored synthetic examples; no real customer dataset.

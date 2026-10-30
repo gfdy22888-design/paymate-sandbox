@@ -6,7 +6,7 @@ The new learning panel uses a real **multinomial Naive Bayes model fitted from 2
 
 - No model download, external API, GPU or npm dependencies are required by the default path.
 - Run: `node server.js`, then visit `http://127.0.0.1:8787`.
-- Tests: run the three original suites below plus `node test/learning.test.js` (21 new checks; 119 total local regression checks).
+- Tests: run the three original suites below, `node test/learning.test.js` (24 checks), and `node test/paypal-contract.test.js` (29 checks using provider doubles). Total: 151 local regression checks; no live Sandbox calls are implied.
 - Reproducible actual API execution: `node demo/run_demo.js demo/api-trace.json`.
 - Current competition plan: Education track; [submission workflow](submission/WORKFLOW.md), [Devpost draft](submission/DEVPOST_DRAFT.md).
 - The captioned demo is rendered from the saved actual API execution trace. It is **not a browser screen recording** and shows no live PayPal or external LLM call. Earlier `ui_*.png` screenshots belong to the original checkout UI validation.
@@ -50,7 +50,7 @@ node test/security.test.js   # 15 assertions: Host/Origin guard, bad cookie/JSON
 node test/e2e.test.js        # 34 assertions: full HTTP chain incl. tamper, cross-session, concurrent capture idempotency
 ```
 
-The original three suites pass (98 checks). The local learning-model suite adds 21 checks, for 119 total. The historical remote Node 22 run and original UI validation are in `TEST_REPORT.md`; the new educational extension is described in `submission/ACCEPTANCE.md`.
+The original three suites pass (98 checks), with 24 learning/API/UI-logic checks and 29 mocked Sandbox boundary checks (151 total). The historical remote Node 22 run and original UI validation are in `TEST_REPORT.md`; the current extension is described in `submission/ACCEPTANCE.md`.
 
 ## PayPal Sandbox adapter (implemented, OFF by default)
 
@@ -66,6 +66,8 @@ PAYMATE_ENABLE_PAYPAL=true
 - Secrets live only in server env vars; never logged; token cached in memory only
 
 **Status: code-ready, NOT integration-tested (no sandbox credentials). Do not claim verified until it has been run end-to-end.**
+
+Use [the private Sandbox checklist](submission/PAYPAL_SANDBOX_CHECKLIST.md). An account email is not an API client ID. Credentials belong only in the gitignored `.env`; `node --env-file=.env server.js` or `bash start.sh` loads it. The adapter is fixed to Sandbox, verifies provider approval and capture amounts, uses stable idempotency keys, rejects HTTP errors/pending captures and does not accept production approval links. These boundaries have contract-double tests; live account integration is still pending.
 
 ## Optional external LLM adapter (OFF by default)
 

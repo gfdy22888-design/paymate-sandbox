@@ -71,7 +71,7 @@ scenes = [
         "Same capture identifier: " + str(events["repeated_capture"]["same_capture_id"]),
         "The SQLite event trail records each authorization transition.",
         "Regression tests additionally exercise concurrency and isolation.",
-        "119 local regression checks passed; fixtures are not a benchmark.",
+        "151 local regression checks passed; fixtures are not a benchmark.",
     ]),
     ("Small default runtime, explicit limits", [
         "No model downloads, API credits, GPU or npm packages are needed.",

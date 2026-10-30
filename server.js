@@ -24,9 +24,12 @@ function withOrderLock(id, fn) {
   const next = prev.then(fn, fn); // run regardless of previous failure
   orderLocks.set(id, next);
   // cleanup: only if the Map still points at THIS chain (avoid clobbering a newer queued op)
-  next.finally(() => {
+  const cleanup = () => {
     if (orderLocks.get(id) === next) orderLocks.delete(id);
-  });
+  };
+  // A dangling .finally() would create a second, unhandled rejecting promise.
+  // Consume both outcomes while the caller awaits the original chain.
+  void next.then(cleanup, cleanup);
   return next;
 }
 
@@ -127,7 +130,7 @@ function page(title, body) {
 </style>
 </head>
 <body>
-<div class="banner">⚠️ ${esc(MODE_LABEL)} ｜ 💰 MOCK 非真实支付（PayPal Sandbox 流程演示；未做真实联调）</div>
+<div class="banner">⚠️ ${esc(MODE_LABEL)} ｜ 💰 ${getAdapter().isLive ? 'PayPal SANDBOX — test funds only; real integration still requires verification' : 'MOCK 非真实支付（PayPal Sandbox 流程演示；未做真实联调）'}</div>
 ${body}
 </body>
 </html>`;
@@ -148,6 +151,7 @@ function homePage() {
     <label for="modelText">Describe one item (e.g. milk coffee, paper lecture notes, 帆布购物袋)</label><br>
     <input type="text" id="modelText" maxlength="512" value="milk coffee">
     <button onclick="classifyLocally()">Get model suggestion</button>
+    <button id="useModelSuggestion" hidden onclick="draftFromSuggestion()">Use suggestion: create an unconfirmed draft (quantity 1)</button>
     <pre id="modelResult" style="white-space:pre-wrap" aria-live="polite"></pre>
     <p class="muted">Try an unknown product or a negation. Compare this statistical suggestion with the strict order parser below. Every payment action still needs a separate human click.</p>
   </div>
@@ -170,14 +174,28 @@ function homePage() {
   </div>
 
   <script>
+  let lastSuggestion = null;
   function escText(s){ const d=document.createElement('div'); d.textContent=String(s??''); return d.innerHTML; }
   async function classifyLocally() {
     const el = document.getElementById('modelResult');
+    lastSuggestion = null;
+    document.getElementById('useModelSuggestion').hidden = true;
     el.textContent = 'Classifying locally…';
     try {
       const r = await fetch('/api/learn/predict', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({text:document.getElementById('modelText').value})});
-      el.textContent = JSON.stringify(await r.json(), null, 2);
+      const data = await r.json();
+      el.textContent = JSON.stringify(data, null, 2);
+      if (data.status === 'suggestion') { lastSuggestion = data.sku; document.getElementById('useModelSuggestion').hidden = false; }
     } catch(e) { el.textContent = 'Request failed: ' + e.message; }
+  }
+  async function draftFromSuggestion() {
+    if (!lastSuggestion) return;
+    try {
+      const r = await fetch('/api/orders', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({items:[{sku:lastSuggestion,qty:1}]})});
+      const d = await r.json();
+      if (r.status !== 201) { document.getElementById('modelResult').textContent = d.error || 'Draft rejected'; return; }
+      location.href = '/order/' + encodeURIComponent(d.order_id);
+    } catch(e) { document.getElementById('modelResult').textContent = 'Request failed: ' + e.message; }
   }
   async function doIntent() {
     const q = document.getElementById('q').value;
@@ -209,6 +227,8 @@ function orderPage(id) {
   <div id="actions" style="margin-top:12px"></div>
   <script>
   const ORDER_ID = ${JSON.stringify(safeId)};
+  const SANDBOX = ${Boolean(getAdapter().isLive)};
+  let approvalUrl = null;
   let ORDER = null;
   function escText(s){ const d=document.createElement('div'); d.textContent=String(s??''); return d.innerHTML; }
   async function load() {
@@ -231,7 +251,13 @@ function orderPage(id) {
     if (o.status === 'draft') {
       a.innerHTML = '<button class="primary" onclick="act(\\'confirm\\')">确认订单（人工确认）</button> <button class="danger" onclick="act(\\'cancel\\')">取消</button>';
     } else if (o.status === 'created') {
-      a.innerHTML = '<div class="mock">MOCK：模拟买家在 PayPal 页面批准（未连接真实 PayPal）</div><button class="primary" onclick="act(\\'approve\\')">模拟买家批准（MOCK approve）</button> <button class="danger" onclick="act(\\'cancel\\')">取消</button>';
+      if (SANDBOX) {
+        a.innerHTML = '<p>Use a Sandbox buyer account with test funds, then return here.</p>'
+          + (approvalUrl ? '<p><a target="_blank" rel="noopener noreferrer" href="'+escText(approvalUrl)+'">Open PayPal SANDBOX approval</a></p>' : '<button onclick="act(\\'confirm\\')">Load Sandbox approval link</button>')
+          + '<button onclick="act(\\'approve\\')">Verify buyer approval with Sandbox API</button> <button class="danger" onclick="act(\\'cancel\\')">Cancel</button>';
+      } else {
+        a.innerHTML = '<div class="mock">MOCK：模拟买家在 PayPal 页面批准（未连接真实 PayPal）</div><button class="primary" onclick="act(\\'approve\\')">模拟买家批准（MOCK approve）</button> <button class="danger" onclick="act(\\'cancel\\')">取消</button>';
+      }
     } else if (o.status === 'approved') {
       a.innerHTML = '<button class="primary" onclick="act(\\'capture\\')">捕获付款（MOCK capture，幂等）</button> <button class="danger" onclick="act(\\'cancel\\')">取消</button>';
     } else if (o.status === 'captured') {
@@ -241,12 +267,16 @@ function orderPage(id) {
     } else if (o.status === 'confirmed') {
       a.innerHTML = '<p>确认中…</p>';
     }
+    if (SANDBOX && ['draft','approved','captured'].includes(o.status)) {
+      a.innerHTML = a.innerHTML.replaceAll('MOCK', 'SANDBOX test funds');
+    }
   }
   async function act(step) {
     try {
       const r = await fetch('/api/orders/' + encodeURIComponent(ORDER_ID) + '/' + step, {method:'POST'});
       const d = await r.json();
       if (d.error) { alert('失败：' + d.error); }
+      if (d.approve_url) approvalUrl = d.approve_url;
       if (d.order) ORDER = d.order;
       render();
     } catch(e) { alert('请求失败：' + e.message); }
@@ -367,7 +397,8 @@ const server = http.createServer(async (req, res) => {
         if (step === 'confirm') {
           if (o0.status === 'created' && o0.paypal_order_id) {
             // idempotent re-confirm after adapter success
-            return { code: 200, body: { order: o0, idempotent: true, adapter: adapter.name } };
+            const approveUrl = adapter.isLive ? await adapter.getApprovalLink({paypalOrderId:o0.paypal_order_id}) : null;
+            return { code: 200, body: { order: o0, idempotent: true, adapter: adapter.name, approve_url:approveUrl } };
           }
           if (o0.status !== 'draft') return { code: 409, body: { error: `ILLEGAL_TRANSITION: ${o0.status} -> confirmed` } };
           let pay;
@@ -384,6 +415,11 @@ const server = http.createServer(async (req, res) => {
         }
 
         if (step === 'approve') {
+          if (adapter.isLive && o0.status !== 'approved') {
+            if (o0.status !== 'created') return {code:409,body:{error:'ILLEGAL_TRANSITION'}};
+            try { await adapter.verifyApproval({paypalOrderId:o0.paypal_order_id,totalCents:o0.total_cents}); }
+            catch { return {code:409,body:{error:'PAYPAL_APPROVAL_NOT_VERIFIED'}}; }
+          }
           const r = store.transition(id, session, 'approved', { note: `${adapter.name} buyer approval` });
           if (!r.ok) return { code: r.code, body: { error: r.error, ...(r.idempotent ? { idempotent: true } : {}) } };
           return { code: 200, body: { order: r.order } };
@@ -396,7 +432,7 @@ const server = http.createServer(async (req, res) => {
           if (o0.status !== 'approved') return { code: 409, body: { error: `ILLEGAL_TRANSITION: ${o0.status} -> captured` } };
           let cap;
           try {
-            cap = await adapter.captureOrder({ paypalOrderId: o0.paypal_order_id, totalCents: o0.total_cents });
+            cap = await adapter.captureOrder({ paypalOrderId: o0.paypal_order_id, totalCents: o0.total_cents, idempotencyKey:id });
           } catch (e) {
             return { code: 502, body: { error: 'ADAPTER_CAPTURE_FAILED', detail: e.message, retryable: true } };
           }

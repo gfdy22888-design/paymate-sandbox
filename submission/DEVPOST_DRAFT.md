@@ -16,7 +16,7 @@ Students experimenting with agents need a concrete way to see why a plausible mo
 
 CheckoutLab exposes a tiny multilingual Naive Bayes classifier trained from 21 explicit, synthetic teaching examples. Students can inspect a suggested product class, its matched features and score separation, or see the model abstain. This is a statistical toy model, not an LLM or a measured production classifier.
 
-The checkout exercise uses a separate strict parser and a fixed seven-item catalog. A server recomputes prices in integer cents, checks quantity limits, and requires distinct human confirmation and mock approval before capture. It rejects unsupported requests, isolates orders by browser session, and returns the same result for repeated capture. All payments are prominently marked MOCK.
+A participant can explicitly choose a model suggestion to create an unconfirmed, quantity-one draft, or use the separate strict order parser. A server recomputes prices in integer cents against a fixed seven-item catalog, checks quantity limits, and requires distinct human confirmation and mock approval before capture. It rejects unsupported requests, isolates orders by browser session, and returns the same result for repeated capture. Default payments are prominently marked MOCK.
 
 ## How we built it / AI disclosure
 

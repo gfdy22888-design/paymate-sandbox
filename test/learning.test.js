@@ -40,6 +40,19 @@ function check(label, fn) { fn(); checks++; console.log('PASS ' + label); }
     for (const script of html.matchAll(/<script>([\s\S]*?)<\/script>/g)) {
       check('generated page script compiles', () => { new (require('node:vm').Script)(script[1]); });
     }
+    // Exercise the generated UI logic against actual HTTP without pretending this
+    // is a browser layout/click-through test.
+    const elements = {modelText:{value:'milk coffee'},modelResult:{textContent:''},useModelSuggestion:{hidden:true}};
+    const vm = require('node:vm');
+    const context = vm.createContext({document:{getElementById:id=>elements[id]},location:{href:''},fetch:(route,options)=>request(route,{...options,headers:{...options.headers,Cookie:'pm_session='+'c'.repeat(32)}})});
+    vm.runInContext([...html.matchAll(/<script>([\s\S]*?)<\/script>/g)][0][1],context);
+    await vm.runInContext('classifyLocally()',context);
+    check('UI logic exposes draft action only after a suggestion', () => assert.equal(elements.useModelSuggestion.hidden,false));
+    check('classification itself never navigates or creates a draft', () => assert.equal(context.location.href,''));
+    await vm.runInContext('draftFromSuggestion()',context);
+    const uiId = context.location.href.split('/').at(-1);
+    const uiDraft = await (await request('/api/orders/'+uiId,{headers:{Cookie:'pm_session='+'c'.repeat(32)}})).json();
+    check('explicit suggestion action creates draft, not approved payment', () => {assert.equal(uiDraft.status,'draft');assert.equal(uiDraft.items[0].sku,'SKU-LATTE');assert.equal(uiDraft.items[0].qty,1);assert.equal(uiDraft.paypal_order_id,null);});
     console.log(`Learning checks: ${checks} passed, 0 failed. These fixtures are not a real-world accuracy benchmark.`);
   } catch (e) { console.error(e); process.exitCode = 1; }
   finally { if (server.listening) await new Promise(resolve => server.close(resolve)); }

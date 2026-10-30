@@ -21,6 +21,12 @@ jobs:
         run: node test/e2e.test.js
       - name: learning model and API
         run: node test/learning.test.js
+      - name: Sandbox boundary contract (no external I/O)
+        run: node test/paypal-contract.test.js
+      - name: verification helper syntax (no external I/O)
+        run: |
+          node --check demo/sandbox_live.js
+          node --check demo/sandbox_return.js
       - name: bounded launcher smoke
         shell: bash
         run: |
