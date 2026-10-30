@@ -3,12 +3,12 @@
 ## Current educational extension
 
 - Local Naive Bayes teaching model, teaching panel, and real-API demo scripts are implemented; the five local check suites currently pass 151/151 (including 24 learning-feature checks and 29 simulated Sandbox contract checks).
-- Current direction is education; the default path depends on neither PayPal nor external model APIs. External integrations remain disabled and unverified — this must not be presented as verified.
+- Current direction is education; the default path depends on neither PayPal nor external model APIs. The PayPal Sandbox adapter was verified end-to-end once (2026-10-30, evidence below) and stays **off by default**; the external LLM adapter has never been exercised and must not be presented as verified.
 - The participant's eligibility profile was reviewed privately against public age/enrollment criteria. Identity details are not written into the public repo; platform-specific and other eligibility statements must be completed truthfully by the participant.
-- An English Devpost draft and workflow checklist are prepared under `submission/`; the demo output is a captioned rendering of an actual API execution trace, not a browser screen recording.
-- Still outstanding: browser click-through acceptance of the new teaching panel, YouTube/Vimeo upload, Devpost registration / terms acceptance / final submission, and Demo Day.
+- The English Devpost submission was filed on 2026-10-30; its drafts live under `submission/`. The demo video is a 2:50 browser screen recording of the MOCK flow (no terminal, no credentials on screen), published Public at https://youtu.be/_OxAlKRfZ7I.
+- Done on 2026-10-30: YouTube upload (Public) and Devpost registration, rule acceptance and submission. Still outstanding: a browser click-through of the teaching panel, and Demo Day.
 - The browser-automation tool connection dropped during a prior session; remote VPS cleanup could not be claimed. Historical test services were reported stopped; current resource headroom is unverified.
-- The newly pushed GitHub CI run must be checked on GitHub after push; older successful runs do not substitute for it. See `submission/ACCEPTANCE.md`.
+- GitHub CI: the `tests` run on `0223dc3` completed **success** (2026-10-30T14:21Z). Any later push needs its own green run. See `submission/ACCEPTANCE.md`.
 
 ## Historical PayMate Sandbox acceptance record (does not imply the new panel passed browser acceptance)
 

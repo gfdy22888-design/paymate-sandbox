@@ -1,5 +1,7 @@
 # CheckoutLab
 
+**Demo video (2:50, public): https://youtu.be/_OxAlKRfZ7I**
+
 ## Quick start (offline demo)
 
 On Windows, double-click the launcher script in the repo root, keep its window open, and visit **http://127.0.0.1:8787**. The script prefers a locally bundled Node; on other machines install Node.js 22+ (with `node:sqlite`) and run `node server.js`. This entry forces offline rule/local-teaching mode and MOCK payment, reads no `.env`, and needs no PayPal credentials.

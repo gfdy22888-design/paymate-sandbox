@@ -12,6 +12,6 @@ The trace's RSS value is one observed local Node process snapshot (58.5 MiB in t
 
 - The new learning panel has API, generated-JavaScript compilation and VM-executed UI-logic checks. Choosing a model suggestion creates only a draft; it does not approve payment. No real browser layout/click-through or new browser screen recording was completed because the browser-control connection was unavailable.
 - Earlier UI screenshots and the 16-check remote smoke test validate the earlier checkout release, not the new learning panel.
-- The optional PayPal Sandbox and external LLM routes remain unverified and disabled.
+- Optional routes are off by default. PayPal Sandbox was verified end-to-end once (2026-10-30, order `2UV73710NH840425B`, capture COMPLETED — see STATUS.md); the external LLM route remains unverified.
 - GitHub CI for this extension is pending until its commit is pushed and checked; an earlier commit's successful run is not evidence for this extension.
-- Registration, rule acceptance, public/unlisted YouTube/Vimeo upload, Devpost submission and Demo Day participation remain separate, uncompleted gates.
+- Registration, rule acceptance, public YouTube upload and Devpost submission were completed on 2026-10-30. Demo Day participation remains a separate, uncompleted gate.

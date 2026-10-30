@@ -170,7 +170,7 @@ function homePage() {
   </div>
 
   <div class="card steps">
-    Flow: parse intent → <b>review the order and click Confirm</b> (human confirmation) → mock approval → mock capture (idempotent). Optional AI and PayPal Sandbox adapters are implemented but disabled/unverified by default.
+    Flow: parse intent → <b>review the order and click Confirm</b> (human confirmation) → mock approval → mock capture (idempotent). Optional AI and PayPal Sandbox adapters are off by default; the PayPal Sandbox route is verified (see STATUS.md), the external LLM route is not.
   </div>
 
   <script>
@@ -506,7 +506,7 @@ if (require.main === module) {
   server.listen(PORT, HOST, () => {
     const adapter = getAdapter();
     console.log(`[paymate] listening on http://${HOST}:${PORT}`);
-    console.log(`[paymate] payment adapter: ${adapter.name} ${adapter.isLive ? '(LIVE sandbox calls — UNVERIFIED)' : '(offline MOCK)'}`);
+    console.log(`[paymate] payment adapter: ${adapter.name} ${adapter.isLive ? '(LIVE sandbox calls to the sandbox account)' : '(offline MOCK)'}`);
     console.log(`[paymate] intent mode: ${aiAdapter ? 'AI+rule fallback (AI UNVERIFIED)' : 'offline rule mode'}`);
   });
 }

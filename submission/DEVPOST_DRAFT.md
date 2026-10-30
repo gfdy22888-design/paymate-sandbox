@@ -34,7 +34,7 @@ The development trace illustrates how to separate probabilistic suggestions from
 
 ## Next steps
 
-Broader teaching examples, accessibility and classroom usability evaluation, and an optional externally hosted model after its cost and privacy conditions are understood. PayPal Sandbox and external LLM adapters remain optional and unverified; neither is required for this offline educational demonstration.
+Broader teaching examples, accessibility and classroom usability evaluation, and an optional externally hosted model after its cost and privacy conditions are understood. Both adapters stay optional and off by default; neither is required for this offline educational demonstration. The PayPal Sandbox route was verified end-to-end once (see STATUS.md), while the external LLM route is unverified.
 
 ## Links and fields
 

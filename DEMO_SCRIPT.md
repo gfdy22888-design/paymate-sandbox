@@ -32,7 +32,7 @@ Current educational demo: `node demo/run_demo.js demo/api-trace.json`, then opti
 
 ## 2:30–3:00 Technical highlights & honest disclosure
 - Node 22 built-ins (http + node:sqlite), zero npm dependencies; Orders API v2 flow + client_credentials server-side auth; secrets never leave the server.
-- AI and PayPal Sandbox adapters are **implemented but disabled/unverified by default**; the UI never claims otherwise.
+- The AI and PayPal Sandbox adapters are **off by default** and the public demo runs MOCK; the PayPal Sandbox route is verified (see STATUS.md), the external LLM route is not.
 - AI disclosure: see `AI_USAGE.md` for the full, truthful record.
 
 ## Recording checklist (todo)

@@ -27,8 +27,7 @@ capture again returns the same stored capture id instead of charging twice. Ille
 
 Node 22 built-ins only — `node:http` and `node:sqlite`, zero npm dependencies, binds 127.0.0.1.
 The payment layer is an adapter interface: a MOCK adapter that reproduces the PayPal Orders v2
-state machine offline, and a PayPal Sandbox adapter (client_credentials, Orders create/approve/
-capture) that is off unless credentials are explicitly configured. A per-order serial lock
+state machine offline, and a PayPal Sandbox adapter (client_credentials, Orders create/approve/capture) that is off unless credentials are explicitly configured. A per-order serial lock
 guarantees the adapter is called exactly once even under concurrent duplicate captures, and
 every transition is written to the SQLite event log.
 
