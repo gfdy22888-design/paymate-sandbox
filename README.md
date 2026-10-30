@@ -1,5 +1,13 @@
 # CheckoutLab
 
+## 中文：先运行离线演示
+
+Windows 用户可双击仓库中的 `运行本机演示.cmd`，保持启动窗口打开，然后在浏览器访问 **http://127.0.0.1:8787**。脚本会优先使用本机 Codex 自带的 Node；其他电脑需先安装支持 `node:sqlite` 的 Node.js 22 或更高版本。此入口强制使用离线规则/本地教学模型和 MOCK 支付，不读取 `.env`，不需要 PayPal 凭据。
+
+先在上方输入 `milk coffee`，点击 **Get model suggestion** 查看模型建议；也可在下方输入 `我要 2 杯拿铁和 1 个笔记本`，点击“解析意图”，依次点击“确认订单 → 模拟买家批准 → 捕获付款”。全程为模拟演示，没有真实扣款。使用脚本启动时，按 Ctrl+C 或关闭启动窗口可停止。
+
+其他系统在有 Node.js 22+ 的环境中运行 `node server.js`，再打开同一个地址。PayPal Sandbox 联调是另一个可选步骤，见下方说明。
+
 An offline educational lab for separating a machine-learning suggestion from an authorized action. Built on the PayMate Sandbox mock-checkout prototype.
 
 The new learning panel uses a real **multinomial Naive Bayes model fitted from 21 explicit synthetic teaching examples**. It classifies one product description, exposes matched features and score separation, and abstains when evidence is insufficient. It is not an LLM; its scores are not calibrated probabilities or real-world accuracy estimates. A prediction never creates or approves an order. The checkout below the panel retains its separate strict rule parser and human confirmation steps.
