@@ -1,62 +1,60 @@
-# STATUS.md — CheckoutLab（2026-10-30 Asia/Shanghai）
+# STATUS.md — CheckoutLab (2026-10-30, Asia/Shanghai)
 
-## 当前教学扩展
+## Current educational extension
 
-- 本地 Naive Bayes 教学模型、教学面板、实际 API 演示脚本已实现；当前五套本机检查 151/151（含24项学习功能、29项模拟Sandbox契约检查）。
-- 当前目标为教育方向；默认路径不依赖 PayPal 或外部模型 API。外部接口仍禁用且未联调，不能冒充验证完成。
-- 参赛者的概况已私下提供；已按公开年龄/在校条件核对。身份信息不写入公开仓库，平台及其他资格声明须如实完成。
-- 已准备英文 Devpost 草稿与流程清单；演示输出为实际 API 执行轨迹的字幕化视频，不是浏览器录屏。
-- 本轮尚未完成新教学面板浏览器点击验收、YouTube/Vimeo 上传、Devpost 报名/条款接受/正式提交或 Demo Day。
-- 浏览器操作工具连接断开，不能声称远程 VPS 已完成清理；历史测试服务已报告停止，当前资源余量未核实。
-- 新提交的 GitHub CI 需在推送后单独核对，不能使用旧提交的成功记录代替。详见 submission/ACCEPTANCE.md。
+- Local Naive Bayes teaching model, teaching panel, and real-API demo scripts are implemented; the five local check suites currently pass 151/151 (including 24 learning-feature checks and 29 simulated Sandbox contract checks).
+- Current direction is education; the default path depends on neither PayPal nor external model APIs. External integrations remain disabled and unverified — this must not be presented as verified.
+- The participant's eligibility profile was reviewed privately against public age/enrollment criteria. Identity details are not written into the public repo; platform-specific and other eligibility statements must be completed truthfully by the participant.
+- An English Devpost draft and workflow checklist are prepared under `submission/`; the demo output is a captioned rendering of an actual API execution trace, not a browser screen recording.
+- Still outstanding: browser click-through acceptance of the new teaching panel, YouTube/Vimeo upload, Devpost registration / terms acceptance / final submission, and Demo Day.
+- The browser-automation tool connection dropped during a prior session; remote VPS cleanup could not be claimed. Historical test services were reported stopped; current resource headroom is unverified.
+- The newly pushed GitHub CI run must be checked on GitHub after push; older successful runs do not substitute for it. See `submission/ACCEPTANCE.md`.
 
-## 以下为原版 PayMate Sandbox 验收历史（不代表新面板已浏览器验收）
+## Historical PayMate Sandbox acceptance record (does not imply the new panel passed browser acceptance)
 
-## 状态总览
+### Verified (with real execution evidence)
 
-| 类别 | 状态 |
-|------|------|
-| 离线 MVP（规则解析 + MOCK 支付全链路） | ✅ 已完成并验证 |
-| 自动化测试 | ✅ 114 断言全绿（unit 49 / security 15 / e2e 34 / HTTP smoke 16） |
-| 浏览器 UI 全链路验收 | ✅ 已实跑并截图（ui_*.png 3 张） |
-| PayPal Sandbox 适配器 | ✅ **已真实联调 2026-10-30**（token → create 订单 `2UV73710NH840425B` → 用户在 PayPal 托管页批准 APPROVED → capture 返回 COMPLETED） |
-| AI 适配器（WorkBuddy Gateway） | ⚠️ 代码就绪、**未启用未验证**（额度待确认） |
-| 参赛就绪 | ❌ 未就绪（见下） |
+#### PayPal Sandbox live integration (2026-10-30)
+- Credential validity: `POST /v1/oauth2/token` (client_credentials) → HTTP 200, access token valid 9h.
+- Real order: `POST /v2/checkout/orders` → PayPal order `2UV73710NH840425B` (USD 21.50 = 2 lattes + 1 notebook); approve URL pointed to `www.sandbox.paypal.com/checkoutnow?token=...`, opened in a real browser to the genuine PayPal sign-in page.
+- Buyer approval: completed by the human participant on PayPal's hosted page; `GET /v2/checkout/orders/{id}` returned `APPROVED`.
+- Capture: local `/approve` → `/capture` (idempotent state machine) → PayPal returned `COMPLETED`, capture id `2UV73710NH840425B`.
+- Adapter switch verified: after `start.sh` loaded `.env`, logs showed `payment adapter: PAYPAL_SANDBOX`; no secrets in logs (grep-verified).
+- Note: sandbox credentials appeared in chat history; **Regenerate the secret** before final submission and update `.env`.
 
-## 已验证（有真实执行证据）
+#### Offline features (previous acceptance round)
+- Chinese/English intent parsing (pre/post quantity words, Chinese numerals, English numerals, `x2` suffixes, multi-item orders)
+- Explicit rejections: 0/-1/1.5/100/1000 quantities, `x100`, negations, ambiguous connectives, unknown products, cross-matching traps, no silent truncation
+- "notebook and gel pen" keeps both items (longest-match-wins)
+- Server-side integer-cents recomputation; `client_total_cents` audit-only, never trusted; strict qty typing (true/"2"/1.5/None all → 400)
+- State machine draft→confirmed→created→approved→captured/cancelled; illegal transitions → 409; terminal states locked
+- Per-order serial lock: under concurrent confirm/capture the adapter is called exactly once, same capture id, exactly one transition in the event log
+- cancel/capture races converge to a single terminal state; adapter failures leave orders retryable in draft
+- Cross-session isolation (404); Host whitelist + exact Origin matching; invalid session formats/JSON rejected; oversized bodies limited (possibly by disconnect)
+- Client rationale never persisted; frontend escapes or uses `textContent`; mock-approve parameter whitelist enforced
+- UI: full order flow + idempotent re-click + ambiguity/negation rejection messages (screenshots on record)
 
-- 中英文意图解析（前置/后置数量词、中文数字、英文数字、x2 后缀、多商品）
-- 明确拒绝：0/-1/1.5/100/1000、x100、"不要拿铁"、"拿铁或者绿茶"、"拿铁和火箭"、"laptop notebook"、"抹茶"（不偷换绿茶）、静默截断已移除
-- "笔记本和中性笔" 两商品均保留（longest-match-wins）
-- 金额服务端分制重算；`client_total_cents` 仅审计不被信任；qty 强类型（true/"2"/1.5/None 均 400）
-- 状态机 draft→confirmed→created→approved→captured/cancelled；非法迁移 409；终态锁定
-- 每订单串行锁：并发 confirm/capture 下 adapter 恰好调用 1 次、同一 capture_id、事件表恰好一次迁移
-- cancel/capture 竞争收敛到单一终态；adapter 故障后订单保持 draft 可重试
-- 跨会话隔离（404）；Host 白名单 + Origin 精确匹配；非法会话格式/JSON 拒绝；超大请求被限制（可能直接断开连接）
-- client rationale 不持久化；前端转义或 textContent 渲染；mock-approve 参数白名单校验
-- UI：完整下单流 + 幂等重按 + 歧义/否定拒绝消息（截图为证）
+## Not verified (explicitly not claimed)
 
-## 未验证（明确不算）
+- ~~PayPal Sandbox live calls~~ → ✅ verified 2026-10-30 (order `2UV73710NH840425B`, capture COMPLETED)
+- AI adapter live calls (gateway quota/pricing unconfirmed)
+- Multi-user load / long-run stability testing
+- Demo video recording, public repo CI run on real GitHub (must check the new run after push)
 
-- ~~PayPal Sandbox 真实调用~~ → ✅ 已于 2026-10-30 真实联调通过（订单 `2UV73710NH840425B`，capture COMPLETED）
-- AI 适配器真实调用（网关额度/收费未确认）
-- 多用户并发压力/长稳测试
-- demo 视频录制、公开仓库 CI 在真实 GitHub 上的运行
+## Not submission-ready
 
-## 参赛未就绪项
-
-1. ~~PayPal sandbox 凭据与联调~~ → ✅ 已完成；剩余：Regenerate secret（凭据曾出现在聊天记录）并更新 .env
-2. AI 网关额度确认 → 才能启用并验证 AI 路径
-3. 资格核验：用户年龄/居住地（PayPal 排除清单）、学籍（备选赛）
-4. 录制 demo 视频并上传 YouTube
-5. Devpost 账号、对官方条款的接受、最终提交（用户动作）
+1. ~~PayPal sandbox credentials & integration~~ → ✅ done; remaining: **Regenerate secret** (credentials appeared in chat) and update `.env`
+2. AI gateway quota confirmation → required before enabling/verifying the AI path
+3. Eligibility self-check: age/residence (PayPal exclusion list), student status (backup contests)
+4. Record and upload the demo video to YouTube (public)
+5. Devpost account, official terms acceptance, final submission (participant actions)
 
 ## Git / GitHub
 
-- 开发环境 Git 提交：`f0c67ed`（MVP）、`c0d01de`（文档）。公开版本另含 Codex 的文档校正与 LICENSE，公开提交历史以 GitHub 为准。
-- GitHub Actions 工作流（Node 22 测试）已就位 `.github/workflows/test.yml`
-- 公开仓库：https://github.com/gfdy22888-design/paymate-sandbox 。README 中的公开说明不代表已报名或提交比赛；CI 运行结果以 GitHub Actions 为准。
+- Development commits: `f0c67ed` (MVP), `c0d01de` (docs). The public version additionally contains documentation corrections, the LICENSE, and further work; the public commit history on GitHub is authoritative.
+- GitHub Actions workflow (Node 22 tests) in place at `.github/workflows/test.yml`.
+- Public repo: https://github.com/gfdy22888-design/paymate-sandbox . Statements in the README do not by themselves constitute contest registration or submission; CI results are authoritative on GitHub Actions.
 
-## 边界声明
+## Boundary statement
 
-本轮未注册参赛账号、未接受比赛条款、未报名或提交、未发生真实付款、未建立定时任务；源码按用户要求准备公开发布。测试服务仅绑定 127.0.0.1，验收后已停止。
+This round registered no contest accounts, accepted no terms, made no submission, moved no real money, and created no scheduled tasks; test servers bound only to 127.0.0.1 and were stopped after acceptance.

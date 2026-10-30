@@ -4,36 +4,36 @@ Current educational demo: `node demo/run_demo.js demo/api-trace.json`, then opti
 
 ## Historical 3-minute mock-checkout browser script
 
-> 录制前提：`bash start.sh`，浏览器打开 http://127.0.0.1:8787 。UI 顶部始终显示"离线规则模式 ｜ MOCK 非真实支付（未做真实联调）"。
+> Prerequisites: `bash start.sh`, open http://127.0.0.1:8787 . The UI banner always shows the current mode (offline rule mode / MOCK payment, or PayPal Sandbox when credentials are configured).
 
-## 0:00–0:20 问题陈述
-- 旁白：自然语言下单体验好，但"AI 误解意图直接扣款"不可接受。
-- 展示首页横幅：**AI 只提议、人确认、系统兜底校验**。
+## 0:00–0:20 Problem statement
+- Narration: natural-language ordering is nice, but "AI misreads intent and charges your money" is unacceptable.
+- Show the homepage banner: **AI proposes, human confirms, the system double-checks.**
 
-## 0:20–0:50 意图解析（成功路径）
-- 输入：`我要 2 杯拿铁和 1 个笔记本` → 点击"解析意图"。
-- 自动跳转订单页：SKU-LATTE×2（$4.50）+ SKU-NOTEBOOK×1（$12.50），合计 **$21.50（服务端权威）**。
-- 指出"解析依据"列：规则匹配关键词与位置，非黑盒。
+## 0:20–0:50 Intent parsing (happy path)
+- Type: `2 lattes and 1 notebook` (or the Chinese equivalent) → click **Parse intent**.
+- Auto-redirect to the order page: SKU-LATTE×2 ($4.50) + SKU-NOTEBOOK×1 ($12.50), total **$21.50 (server-authoritative)**.
+- Point out the "Why matched" column: keyword/position matches, not a black box.
 
-## 0:50–1:20 金额不可信任 + 拒绝猜测
-- 旁白+画面：金额一律服务端按分重算；前端声称金额仅审计。
-- 返回首页，输入 `拿铁或者绿茶` → 显示"无法确定意图：AMBIGUOUS_CONNECTIVE（或者）"。
-- 输入 `不要拿铁` → `NEGATION_UNSUPPORTED`；输入 `拿铁 x1000` → 拒绝，**不做静默截断**。
+## 0:50–1:20 Amounts cannot be trusted + no guessing
+- Narration + screen: every amount is recomputed server-side in integer cents; client-claimed totals are audit-only.
+- Back home, type an ambiguous input → the UI explicitly reports "Cannot determine intent" with a reason. **The system never guesses.**
+- Type a negation → `NEGATION_UNSUPPORTED`; type an oversized quantity → rejected with **no silent clamping**.
 
-## 1:20–2:00 人工确认 → MOCK 批准 → 捕获
-- 回到订单页，点击 **确认订单（人工确认）** → 状态 draft → created，支付单号 `MOCK-PAYPAL-...`。
-- 点击 **模拟买家批准（MOCK approve）** → approved。
-- 点击 **捕获付款（MOCK capture）** → captured，绿色"✅ 已捕获（MOCK）"。
+## 1:20–2:00 Human confirmation → approval → capture
+- Back on the order page, click **Confirm order (human confirmation)** → status draft → created, payment order `MOCK-PAYPAL-...` (or a real sandbox order id).
+- Click **Simulate buyer approval (mock approve)** → approved. (With sandbox credentials: approve on the real PayPal hosted page.)
+- Click **Capture payment (mock capture)** → captured, green "✅ Captured".
 
-## 2:00–2:30 幂等 + 取消 + 审计
-- 点击 **再次点击验证幂等** → 仍 captured，同一 capture_id。
-- 新开一单走到 created，点 **取消** → cancelled（终态）；再点捕获 → 409 拒绝。
-- （旁白）每笔状态迁移写入 SQLite 事件表；并发重复捕获经串行锁保证 adapter 仅调用一次。
+## 2:00–2:30 Idempotency + cancel + audit
+- Click **verify idempotency** again → still captured, same capture id.
+- Start a new order up to created, click **Cancel** → cancelled (terminal); clicking capture afterwards → 409 rejection.
+- (Narration) every transition is written to the SQLite event log; a per-order serial lock guarantees the adapter is called exactly once under concurrent duplicate captures.
 
-## 2:30–3:00 技术要点与诚实披露
-- Node 22 内置（http + node:sqlite）零依赖；Orders API v2 流程 + client_credentials 服务端认证；密钥不出服务端。
-- AI 与 PayPal Sandbox 适配器**已实现但默认关闭、未验证**；UI 不标已验证。
-- AI 披露：代码由 QwenPaw Agent（glm-5.3-flash）编写，无人工 review，详见 AI_USAGE.md。
+## 2:30–3:00 Technical highlights & honest disclosure
+- Node 22 built-ins (http + node:sqlite), zero npm dependencies; Orders API v2 flow + client_credentials server-side auth; secrets never leave the server.
+- AI and PayPal Sandbox adapters are **implemented but disabled/unverified by default**; the UI never claims otherwise.
+- AI disclosure: see `AI_USAGE.md` for the full, truthful record.
 
-## 录制清单（待办，未完成）
-- [ ] 录屏 + 上传 YouTube 公开（提交材料所需）
+## Recording checklist (todo)
+- [ ] Screen-record + upload publicly to YouTube (required submission material)

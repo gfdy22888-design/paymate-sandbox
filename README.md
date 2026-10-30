@@ -1,12 +1,10 @@
 # CheckoutLab
 
-## 中文：先运行离线演示
+## Quick start (offline demo)
 
-Windows 用户可双击仓库中的 `运行本机演示.cmd`，保持启动窗口打开，然后在浏览器访问 **http://127.0.0.1:8787**。脚本会优先使用本机 Codex 自带的 Node；其他电脑需先安装支持 `node:sqlite` 的 Node.js 22 或更高版本。此入口强制使用离线规则/本地教学模型和 MOCK 支付，不读取 `.env`，不需要 PayPal 凭据。
+On Windows, double-click the launcher script in the repo root, keep its window open, and visit **http://127.0.0.1:8787**. The script prefers a locally bundled Node; on other machines install Node.js 22+ (with `node:sqlite`) and run `node server.js`. This entry forces offline rule/local-teaching mode and MOCK payment, reads no `.env`, and needs no PayPal credentials.
 
-先在上方输入 `milk coffee`，点击 **Get model suggestion** 查看模型建议；也可在下方输入 `我要 2 杯拿铁和 1 个笔记本`，点击“解析意图”，依次点击“确认订单 → 模拟买家批准 → 捕获付款”。全程为模拟演示，没有真实扣款。使用脚本启动时，按 Ctrl+C 或关闭启动窗口可停止。
-
-其他系统在有 Node.js 22+ 的环境中运行 `node server.js`，再打开同一个地址。PayPal Sandbox 联调是另一个可选步骤，见下方说明。
+Try `milk coffee` in the model panel, or type a shopping intent like `2 lattes and 1 notebook` (English and Chinese both supported), then click **Parse intent → Confirm order → Simulate buyer approval → Capture payment**. Everything is a sandbox/mock demonstration — no real charge ever happens.
 
 An offline educational lab for separating a machine-learning suggestion from an authorized action. Built on the PayMate Sandbox mock-checkout prototype.
 
@@ -28,7 +26,7 @@ Natural-language shopping intent → explainable order → **human confirmation*
 
 ## Features
 
-- **Deterministic rule-based intent parsing** (default, offline): Chinese/English shopping intents ("我要 2 杯拿铁和 1 个笔记本" / "2 notebook and 1 pen") → structured line items with per-item rationale. Unknown / ambiguous / negated / oversized inputs are **explicitly rejected — never guessed** (e.g. "拿铁或者绿茶", "不要拿铁", "laptop notebook", "拿铁 x1000" all → `unresolvable` with a reason).
+- **Deterministic rule-based intent parsing** (default, offline): Chinese/English shopping intents ("2 杯拿铁和 1 个笔记本" / "2 lattes and 1 notebook") → structured line items with per-item rationale. Unknown / ambiguous / negated / oversized inputs are **explicitly rejected — never guessed** (e.g. ambiguous connectives, negations, "laptop notebook", oversized quantities all → `unresolvable` with a reason).
 - **Server-side price authority**: prices exist only in a server-side catalog constant; any client-sent total is recorded as `client_total_cents` for audit and **never trusted**; totals are recomputed server-side in integer cents.
 - **Strict server-side validation**: SKU whitelist; quantity must be a JSON integer (not `true`, `"2"`, `1.5`); per-item cap 10; per-order total quantity cap 20; no silent clamping.
 - **Human confirmation**: `draft → (user clicks Confirm) → created → buyer approves → approved → capture`.

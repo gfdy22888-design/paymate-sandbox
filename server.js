@@ -100,7 +100,7 @@ function sameOriginOk(req) {
 }
 
 // ---------- HTML ----------
-const MODE_LABEL = aiAdapter ? 'AI+规则回退（AI 未验证，仅实验）' : '离线规则模式 Offline Rule Mode';
+const MODE_LABEL = aiAdapter ? 'AI fallback mode (experimental, unverified)' : 'Offline rule mode';
 function page(title, body) {
   return `<!doctype html>
 <html lang="zh">
@@ -130,7 +130,7 @@ function page(title, body) {
 </style>
 </head>
 <body>
-<div class="banner">⚠️ ${esc(MODE_LABEL)} ｜ 💰 ${getAdapter().isLive ? 'PayPal SANDBOX — test funds only; real integration still requires verification' : 'MOCK 非真实支付（PayPal Sandbox 流程演示；未做真实联调）'}</div>
+<div class="banner">⚠️ ${esc(MODE_LABEL)} ｜ 💰 ${getAdapter().isLive ? 'PayPal SANDBOX — test funds only; real integration still requires verification' : 'MOCK — not a real payment (PayPal Sandbox flow demo)'}</div>
 ${body}
 </body>
 </html>`;
@@ -143,12 +143,12 @@ function homePage() {
   return page('CheckoutLab — PayMate Sandbox', `
   <h1>CheckoutLab</h1>
   <p>Learn the boundary between a model suggestion and an authorized transaction. Built on the PayMate Sandbox offline prototype.</p>
-  <p class="muted">自然语言购物意图 → 可解释订单 → 人工确认 → MOCK 沙箱结账（PayPal Orders v2 流程演示）</p>
+  <p class="muted">Natural-language shopping intent → explainable order → human confirmation → sandbox checkout (PayPal Orders v2 flow)</p>
 
   <div class="card">
     <h3>Learning experiment: a tiny local ML model</h3>
     <p>Multinomial Naive Bayes trained on 21 synthetic teaching examples, seven product classes. No API, downloads, or GPU. This is not an LLM; its score is not a calibrated probability. It never submits orders.</p>
-    <label for="modelText">Describe one item (e.g. milk coffee, paper lecture notes, 帆布购物袋)</label><br>
+    <label for="modelText">Describe one item (e.g. milk coffee, paper lecture notes, canvas tote bag)</label><br>
     <input type="text" id="modelText" maxlength="512" value="milk coffee">
     <button onclick="classifyLocally()">Get model suggestion</button>
     <button id="useModelSuggestion" hidden onclick="draftFromSuggestion()">Use suggestion: create an unconfirmed draft (quantity 1)</button>
@@ -157,20 +157,20 @@ function homePage() {
   </div>
 
   <div class="card">
-    <h3>① 描述你想买什么</h3>
-    <input type="text" id="q" placeholder="例如：我要 2 杯拿铁和 1 个笔记本 / 2 latte and 1 notebook">
-    <button class="primary" onclick="doIntent()">解析意图</button>
+    <h3>1. Describe what you want to buy</h3>
+    <input type="text" id="q" placeholder="e.g. 2 lattes and 1 notebook">
+    <button class="primary" onclick="doIntent()">Parse intent</button>
     <div id="intentResult" style="margin-top:10px"></div>
   </div>
 
   <div class="card">
-    <h3>商品目录（服务端定价，共 ${CATALOG.length} 件）</h3>
-    <table><tr><th>SKU</th><th>商品</th><th class="amount">单价</th></tr>${rows}</table>
-    <p class="muted">单件数量上限 ${MAX_QTY_PER_ITEM}，每单总件数上限 ${MAX_ITEMS_PER_ORDER}。金额一律服务端重算；前端声称金额仅审计，不被信任。</p>
+    <h3>Catalog (server-side pricing, ${CATALOG.length} items)</h3>
+    <table><tr><th>SKU</th><th>Item</th><th class="amount">Unit price</th></tr>${rows}</table>
+    <p class="muted">Max ${MAX_QTY_PER_ITEM} per item, max ${MAX_ITEMS_PER_ORDER} units per order. All amounts are recomputed server-side; client-claimed totals are audit-only and never trusted.</p>
   </div>
 
   <div class="card steps">
-    流程：解析意图 → <b>核对订单并点“确认订单”</b>（人工确认）→ MOCK 批准 → MOCK 捕获（幂等）。可选 AI 与 PayPal Sandbox 适配器已实现但默认关闭、未验证。
+    Flow: parse intent → <b>review the order and click Confirm</b> (human confirmation) → mock approval → mock capture (idempotent). Optional AI and PayPal Sandbox adapters are implemented but disabled/unverified by default.
   </div>
 
   <script>
@@ -200,30 +200,30 @@ function homePage() {
   async function doIntent() {
     const q = document.getElementById('q').value;
     const el = document.getElementById('intentResult');
-    el.textContent = '解析中…';
+    el.textContent = 'Parsing…';
     try {
       const r = await fetch('/api/intent', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({text:q})});
       const d = await r.json();
       if (d.status !== 'ok') {
-        el.textContent = '无法确定意图：' + (d.reason||'') + (d.detail? '（'+d.detail.join(' / ')+'）':'') + '。请明确写出目录中的商品名称与数量；系统不做猜测。';
+        el.textContent = 'Cannot determine intent: ' + (d.reason||'') + (d.detail? ' ('+d.detail.join(' / ')+')' : '') + '. Name items from the catalog with quantities; the system never guesses.';
         return;
       }
       // send only sku+qty; server computes price; omit client_total_cents (no fake numbers)
       const r2 = await fetch('/api/orders', {method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({items: d.items.map(i=>({sku:i.sku, qty:i.qty}))})});
       const d2 = await r2.json();
-      if (d2.error) { el.textContent = '下单失败：' + d2.error; return; }
+      if (d2.error) { el.textContent = 'Order failed: ' + d2.error; return; }
       location.href = '/order/' + encodeURIComponent(d2.order_id);
-    } catch(e) { el.textContent = '请求失败：' + e.message; }
+    } catch(e) { el.textContent = 'Request failed: ' + e.message; }
   }
   </script>`);
 }
 
 function orderPage(id) {
   const safeId = /^[A-Za-z0-9\-]+$/.test(id) ? id : '';
-  return page('订单', `
-  <h1>订单 <span class="mono" id="oid"></span></h1>
-  <div id="content">加载中…</div>
+  return page('Order', `
+  <h1>Order <span class="mono" id="oid"></span></h1>
+  <div id="content">Loading…</div>
   <div id="actions" style="margin-top:12px"></div>
   <script>
   const ORDER_ID = ${JSON.stringify(safeId)};
@@ -233,7 +233,7 @@ function orderPage(id) {
   function escText(s){ const d=document.createElement('div'); d.textContent=String(s??''); return d.innerHTML; }
   async function load() {
     const r = await fetch('/api/orders/' + encodeURIComponent(ORDER_ID));
-    if (r.status === 404) { document.getElementById('content').textContent = '订单不存在或不属于当前会话。'; return; }
+    if (r.status === 404) { document.getElementById('content').textContent = 'Order not found or not owned by this session.'; return; }
     ORDER = await r.json();
     render();
   }
@@ -242,30 +242,30 @@ function orderPage(id) {
     document.getElementById('oid').textContent = o.id;
     const rows = o.items.map(i =>
       '<tr><td class="mono">'+escText(i.sku)+'</td><td>'+escText(i.qty)+'</td><td class="amount">'+escText((i.unit_price_cents/100).toFixed(2))+'</td><td class="amount">'+escText((i.qty*i.unit_price_cents/100).toFixed(2))+'</td><td class="muted">'+escText(i.rationale||'')+'</td></tr>').join('');
-    let statusLine = '<p>状态：<b>'+escText(o.status)+'</b> ｜ 服务端合计（权威）：<b>$'+escText((o.total_cents/100).toFixed(2))+'</b>'
-      + (o.client_total_cents!=null ? ' ｜ 前端声称金额（仅审计，不被信任）：$'+escText((o.client_total_cents/100).toFixed(2)) : '')
-      + (o.paypal_order_id ? ' ｜ 支付单号：<span class="mono">'+escText(o.paypal_order_id)+'</span>' : '') + '</p>';
+    let statusLine = '<p>Status: <b>'+escText(o.status)+'</b> | Server total (authoritative): <b>$'+escText((o.total_cents/100).toFixed(2))+'</b>'
+      + (o.client_total_cents!=null ? ' | Client-claimed total (audit only, never trusted): $'+escText((o.client_total_cents/100).toFixed(2)) : '')
+      + (o.paypal_order_id ? ' | Payment order: <span class="mono">'+escText(o.paypal_order_id)+'</span>' : '') + '</p>';
     document.getElementById('content').innerHTML = statusLine +
-      '<table><tr><th>SKU</th><th>数量</th><th class="amount">单价</th><th class="amount">小计</th><th>解析依据</th></tr>'+rows+'</table>';
+      '<table><tr><th>SKU</th><th>Qty</th><th class="amount">Unit price</th><th class="amount">Subtotal</th><th>Why matched</th></tr>'+rows+'</table>';
     const a = document.getElementById('actions');
     if (o.status === 'draft') {
-      a.innerHTML = '<button class="primary" onclick="act(\\'confirm\\')">确认订单（人工确认）</button> <button class="danger" onclick="act(\\'cancel\\')">取消</button>';
+      a.innerHTML = '<button class="primary" onclick="act(\\'confirm\\')">Confirm order (human confirmation)</button> <button class="danger" onclick="act(\\'cancel\\')">Cancel</button>';
     } else if (o.status === 'created') {
       if (SANDBOX) {
         a.innerHTML = '<p>Use a Sandbox buyer account with test funds, then return here.</p>'
           + (approvalUrl ? '<p><a target="_blank" rel="noopener noreferrer" href="'+escText(approvalUrl)+'">Open PayPal SANDBOX approval</a></p>' : '<button onclick="act(\\'confirm\\')">Load Sandbox approval link</button>')
           + '<button onclick="act(\\'approve\\')">Verify buyer approval with Sandbox API</button> <button class="danger" onclick="act(\\'cancel\\')">Cancel</button>';
       } else {
-        a.innerHTML = '<div class="mock">MOCK：模拟买家在 PayPal 页面批准（未连接真实 PayPal）</div><button class="primary" onclick="act(\\'approve\\')">模拟买家批准（MOCK approve）</button> <button class="danger" onclick="act(\\'cancel\\')">取消</button>';
+        a.innerHTML = '<div class="mock">MOCK: simulated buyer approval (no real PayPal connection)</div><button class="primary" onclick="act(\\'approve\\')">Simulate buyer approval (mock)</button> <button class="danger" onclick="act(\\'cancel\\')">Cancel</button>';
       }
     } else if (o.status === 'approved') {
-      a.innerHTML = '<button class="primary" onclick="act(\\'capture\\')">捕获付款（MOCK capture，幂等）</button> <button class="danger" onclick="act(\\'cancel\\')">取消</button>';
+      a.innerHTML = '<button class="primary" onclick="act(\\'capture\\')">Capture payment (mock capture, idempotent)</button> <button class="danger" onclick="act(\\'cancel\\')">Cancel</button>';
     } else if (o.status === 'captured') {
-      a.innerHTML = '<p class="ok">✅ 已捕获（MOCK）。重复点击返回同一结果（幂等）。</p><button onclick="act(\\'capture\\')">再次点击验证幂等</button>';
+      a.innerHTML = '<p class="ok">✅ Captured (MOCK). Repeated clicks return the same result (idempotent).</p><button onclick="act(\\'capture\\')">Click again to verify idempotency</button>';
     } else if (o.status === 'cancelled') {
-      a.innerHTML = '<p class="err">订单已取消（终态）。</p>';
+      a.innerHTML = '<p class="err">Order cancelled (terminal).</p>';
     } else if (o.status === 'confirmed') {
-      a.innerHTML = '<p>确认中…</p>';
+      a.innerHTML = '<p>Confirming…</p>';
     }
     if (SANDBOX && ['draft','approved','captured'].includes(o.status)) {
       a.innerHTML = a.innerHTML.replaceAll('MOCK', 'SANDBOX test funds');
@@ -275,31 +275,31 @@ function orderPage(id) {
     try {
       const r = await fetch('/api/orders/' + encodeURIComponent(ORDER_ID) + '/' + step, {method:'POST'});
       const d = await r.json();
-      if (d.error) { alert('失败：' + d.error); }
+      if (d.error) { alert('Failed: ' + d.error); }
       if (d.approve_url) approvalUrl = d.approve_url;
       if (d.order) ORDER = d.order;
       render();
-    } catch(e) { alert('请求失败：' + e.message); }
+    } catch(e) { alert('Request failed: ' + e.message); }
   }
-  if (ORDER_ID) load(); else document.getElementById('content').textContent = '非法订单号。';
+  if (ORDER_ID) load(); else document.getElementById('content').textContent = 'Invalid order id.';
   </script>`);
 }
 
 function mockApprovePage(orderId, ppid) {
-  return page('MOCK 批准页', `
-  <h1>MOCK PayPal 批准页</h1>
-  <div class="mock">这不是 PayPal。这是本地模拟的“买家批准”步骤，用于演示 Orders API v2 流程。无真实资金。</div>
+  return page('MOCK approval page', `
+  <h1>Mock PayPal approval page</h1>
+  <div class="mock">This is not PayPal. This is a locally simulated buyer-approval step for the Orders API v2 flow. No real funds.</div>
   <div class="card">
-    <p>本地订单：<span class="mono">${esc(orderId)}</span></p>
-    <p>MOCK PayPal 订单号：<span class="mono">${esc(ppid)}</span></p>
-    <button class="primary" onclick="approveNow()">✅ 模拟买家批准（真实调用 approve 接口）</button>
-    <button class="danger" onclick="location.href='/order/${esc(orderId)}'">返回订单（不批准）</button>
+    <p>Local order: <span class="mono">${esc(orderId)}</span></p>
+    <p>Mock PayPal order id: <span class="mono">${esc(ppid)}</span></p>
+    <button class="primary" onclick="approveNow()">✅ Simulate buyer approval (calls the real approve endpoint)</button>
+    <button class="danger" onclick="location.href='/order/${esc(orderId)}'">Back to order (decline)</button>
   </div>
   <script>
   async function approveNow() {
     const r = await fetch('/api/orders/${esc(orderId)}/approve', {method:'POST'});
     const d = await r.json();
-    if (d.error) { alert('失败：' + d.error); }
+    if (d.error) { alert('Failed: ' + d.error); }
     location.href = '/order/${esc(orderId)}';
   }
   </script>`);
@@ -317,7 +317,7 @@ const server = http.createServer(async (req, res) => {
       const oid = url.searchParams.get('order') || '';
       const ppid = url.searchParams.get('ppid') || '';
       if (!/^[A-Za-z0-9\-]{1,64}$/.test(oid) || !/^[A-Za-z0-9\-]{1,64}$/.test(ppid)) {
-        return html(res, 400, page('错误', '<p class="err">非法参数。</p>'));
+        return html(res, 400, page('Error', '<p class="err">Invalid parameters.</p>'));
       }
       return html(res, 200, mockApprovePage(oid, ppid));
     }
@@ -353,7 +353,7 @@ const server = http.createServer(async (req, res) => {
           const ai = await aiAdapter.parseIntent(body.text);
           if (ai && Array.isArray(ai.items) && ai.items.length > 0
               && ai.items.every(it => getBySku(it?.sku) && Number.isInteger(it?.qty) && it.qty >= 1 && it.qty <= MAX_QTY_PER_ITEM)) {
-            result = { status: 'ok', items: ai.items.map(it => ({ sku: it.sku, qty: it.qty, rationale: 'AI 适配层解析（已通过服务端校验）' })), mode: 'ai' };
+            result = { status: 'ok', items: ai.items.map(it => ({ sku: it.sku, qty: it.qty, rationale: 'AI adapter parse (passed server-side validation)' })), mode: 'ai' };
           }
         } catch { /* fall back to rule result */ }
       }
@@ -375,7 +375,7 @@ const server = http.createServer(async (req, res) => {
           if (!prod) throw new Error('UNKNOWN_SKU: ' + String(it.sku).slice(0, 40));
           if (q < 1 || q > MAX_QTY_PER_ITEM) throw new Error(`INVALID_QTY: ${prod.sku} qty=${q}`);
           // server-side price only; client rationale NEVER persisted
-          return { sku: prod.sku, qty: q, unit_price_cents: prod.unit_price_cents, rationale: '服务端目录定价' };
+          return { sku: prod.sku, qty: q, unit_price_cents: prod.unit_price_cents, rationale: 'server catalog pricing' };
         });
         const total = computeTotalCents(items);
         const clientTotal = Number.isInteger(body.client_total_cents) ? body.client_total_cents : null;

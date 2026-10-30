@@ -1,7 +1,9 @@
-# TEST_REPORT.md — 真实测试执行日志
+# TEST_REPORT.md — Real test execution log
 
-**日期**: 2026-10-29 19:47 UTC（= Asia/Singapore 2026-10-30 03:47）
-**环境**: v22.23.4 / Python 3.11.17 / Linux x86_64
+**Date**: 2026-10-29 19:47 UTC (= 2026-10-30 03:47 Asia/Singapore)
+**Environment**: Node v22.23.4 / Python 3.11.17 / Linux x86_64
+
+> Note: the test inputs below intentionally include Chinese shopping phrases — bilingual intent parsing is a product feature, and the assertions verify that behavior. English-only inputs are covered in the same suites.
 
 ===== unit =====
 (Use `node --trace-warnings ...` to show where the warning was created)
