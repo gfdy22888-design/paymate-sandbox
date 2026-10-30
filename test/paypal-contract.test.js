@@ -110,7 +110,7 @@ function harness() {
     const html = await page.text();
     for (const match of html.matchAll(/<script>([\s\S]*?)<\/script>/g)) check('Sandbox order-page JavaScript compiles', () => {new (require('node:vm').Script)(match[1]);});
     check('Sandbox banner does not claim MOCK integration', () => assert.match(html,/PayPal SANDBOX — test funds only/));
-    console.log(`Sandbox contract: ${checks} checks passed; zero real PayPal requests. Live integration remains unverified.`);
+    console.log(`Sandbox contract: ${checks} checks passed; zero real PayPal requests; this suite does not exercise the live adapter (see STATUS.md for the one recorded sandbox run).`);
   } catch(e) {console.error(e);process.exitCode=1;}
   finally {if(server?.listening) await new Promise(resolve=>server.close(resolve));}
 })();
